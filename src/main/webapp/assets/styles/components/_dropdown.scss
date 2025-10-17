@@ -1,0 +1,11 @@
+.dropdown-item {
+
+  &-danger {
+    color: $color-red-500;
+
+    &:hover {
+      background-color: $color-red-100;
+      color: $color-red-700;
+    }
+  }
+}
