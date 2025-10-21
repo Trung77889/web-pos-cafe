@@ -1,6 +1,7 @@
 package com.laptrinhweb.zerostarcafe.dao;
 
 import com.laptrinhweb.zerostarcafe.model.User;
+import com.laptrinhweb.zerostarcafe.utils.DBConnection;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

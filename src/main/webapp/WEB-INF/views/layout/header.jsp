@@ -1,13 +1,13 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
-<!-- ============ HEADER START ============ -->
 <header class="header">
     <div class="container header-main">
         <nav class="navbar navbar-expand-lg">
             <div class="container-fluid">
                 <!-- Brand name -->
-                <a class="navbar-brand fw-semibold text-primary" href="#">Zero Star Coffee</a>
+                <a class="navbar-brand fw-semibold text-primary" href="./">Zero Star
+                    Coffee</a>
 
                 <!-- Menu toggle -->
                 <button
@@ -31,7 +31,6 @@
                             <a class="nav-link" href="#">Đặt chỗ</a>
                         </li>
 
-                        <!-- ======================= USER CONTROL ======================= -->
                         <c:choose>
                             <c:when test="${empty sessionScope.user}">
                                 <li class="nav-item ms-md-auto">
@@ -70,7 +69,8 @@
                                             <hr class="dropdown-divider"/>
                                         </li>
                                         <li>
-                                            <a class="dropdown-item text-danger" href="./views/partials/logout.jsp">
+                                            <a class="dropdown-item text-danger"
+                                                    href="./logout">
                                                 Đăng xuất
                                             </a>
                                         </li>
@@ -78,7 +78,6 @@
                                 </li>
                             </c:otherwise>
                         </c:choose>
-                        <!-- =========================================================== -->
                     </ul>
                 </div>
             </div>
@@ -87,4 +86,3 @@
 </header>
 
 <%@ include file="modals.jsp" %>
-<!-- ============ HEADER END ============ -->

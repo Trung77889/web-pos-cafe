@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+
+    <!--  Declare DataSource  -->
+    <Resource name="jdbc/ZeroStarDB"
+              auth="Container"
+              type="javax.sql.DataSource"
+
+              driverClassName="com.mysql.cj.jdbc.Driver"
+              url="jdbc:mysql://localhost:3306/zerostar_cf"
+              username="root"
+              password=""
+
+              initialSize="5"
+              maxTotal="30"
+              minIdle="5"
+              maxIdle="15"
+              maxWaitMillis="30000"
+
+              validationQuery="SELECT 1"
+              validationQueryTimeout="5"
+
+              timeBetweenEvictionRunsMillis="600000"
+              testWhileIdle="true"
+
+              removeAbandonedOnBorrow="true"
+              removeAbandonedOnMaintenance="true"
+
+              defaultTransactionIsolation="REPEATABLE_READ"
+              poolPreparedStatements="true"
+              maxOpenPreparedStatements="100"
+    />
+</Context>

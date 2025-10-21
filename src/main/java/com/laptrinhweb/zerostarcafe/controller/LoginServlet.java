@@ -28,14 +28,20 @@ public class LoginServlet extends HttpServlet {
             HttpSession session = request.getSession();
             session.setAttribute("user", user);
 
+            request.setAttribute("pageTitle", "Chào mừng đến với Zero Star Cafe");
+
             if (user.isSuperAdmin() || !user.getRoleCode().equals("customer")) {
-                response.sendRedirect("views/admin/welcome.jsp");
+                request.setAttribute("pageContent", "/WEB-INF/views/admin/welcome.jsp");
+                request.getRequestDispatcher("/WEB-INF/views/layout/main-layout.jsp")
+                        .forward(request, response);
             } else {
-                response.sendRedirect("views/user/welcome.jsp");
+                request.setAttribute("pageContent", "/WEB-INF/views/user/welcome.jsp");
+                request.getRequestDispatcher("/WEB-INF/views/layout/main-layout.jsp")
+                        .forward(request, response);
             }
         } else {
             request.setAttribute("error", "Sai tài khoản hoặc mật khẩu!");
-            request.getRequestDispatcher("404.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/pages/error.jsp").forward(request, response);
         }
     }
 }

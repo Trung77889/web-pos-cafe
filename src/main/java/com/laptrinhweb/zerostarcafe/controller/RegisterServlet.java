@@ -28,7 +28,7 @@ public class RegisterServlet extends HttpServlet {
             response.sendRedirect("views/user/welcome.jsp?success=1");
         } else {
             request.setAttribute("error", "Đăng ký thất bại, thử lại!");
-            request.getRequestDispatcher("404.jsp").forward(request, response);
+            request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
 }
