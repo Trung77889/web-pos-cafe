@@ -1,5 +1,6 @@
 package com.laptrinhweb.zerostarcafe.utils;
 
+import com.laptrinhweb.zerostarcafe.core.database.DBConnection;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;

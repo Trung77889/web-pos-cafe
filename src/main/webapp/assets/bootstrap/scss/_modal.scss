@@ -62,6 +62,7 @@
     transform: $modal-fade-transform;
     @include transition($modal-transition);
   }
+
   .modal.show & {
     transform: $modal-show-transform;
   }
@@ -109,7 +110,7 @@
   outline: 0;
 }
 
-// Modal background
+// ModalManager background
 .modal-backdrop {
   // scss-docs-start modal-backdrop-css-vars
   --#{$prefix}backdrop-zindex: #{$zindex-modal-backdrop};
@@ -120,7 +121,7 @@
   @include overlay-backdrop(var(--#{$prefix}backdrop-zindex), var(--#{$prefix}backdrop-bg), var(--#{$prefix}backdrop-opacity));
 }
 
-// Modal header
+// ModalManager header
 // Top section of the modal w/ title and dismiss
 .modal-header {
   display: flex;
@@ -146,7 +147,7 @@
   line-height: var(--#{$prefix}modal-title-line-height);
 }
 
-// Modal body
+// ModalManager body
 // Where all modal content resides (sibling of .modal-header and .modal-footer)
 .modal-body {
   position: relative;
@@ -237,4 +238,5 @@
     }
   }
 }
+
 // scss-docs-end modal-fullscreen-loop

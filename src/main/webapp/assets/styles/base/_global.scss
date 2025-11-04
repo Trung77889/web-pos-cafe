@@ -32,7 +32,7 @@ $btn-padding-y-lg: 1.2rem;
 $btn-border-radius-lg: 1.6rem;
 $btn-font-size-lg: 1.6rem;
 
-// Modal
+// ModalManager
 $modal-inner-padding: 2.4rem;
 $modal-content-bg: white;
 $modal-content-border-radius: 1.6rem;
@@ -46,7 +46,7 @@ $input-line-height: 1;
 $input-border-radius: 8px;
 
 $form-floating-height: 5.2rem;
-$form-floating-input-padding-t: 2rem;
+$form-floating-input-padding-t: 2.5rem;
 $form-floating-label-height: 1.25em;
 $form-floating-label-transform: scale(0.75) translateY(-0.75rem) translateX(0.15rem);
 
@@ -60,5 +60,12 @@ $dropdown-item-padding-y: 1rem;
 $dropdown-item-padding-x: 1.6rem;
 
 // Navbar
-$navbar-padding-y: 1.6rem;
+$navbar-padding-y: 2rem;
 $navbar-brand-font-size: 2.4rem;
+
+// ToastNotifier
+$toast-max-width: 350px;
+$toast-padding-x: 1.6rem;
+$toast-font-size: 1.4rem;
+$toast-border-radius: 8px;
+$toast-spacing: 1.2rem;

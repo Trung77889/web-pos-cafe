@@ -50,6 +50,7 @@
     &.prev {
       left: -1.6rem;
     }
+
     &.next {
       right: -1.6rem;
     }
@@ -104,15 +105,17 @@
   overflow: hidden;
   cursor: pointer;
 }
+
 .card-img-top {
   height: 18rem;
   object-fit: cover;
 }
+
 .card-body {
   padding: 1.2rem 1.6rem;
 }
 
-// Product Detail Modal Styles
+// Product Detail ModalManager Styles
 .product-info {
   &__image {
     img {
@@ -244,6 +247,7 @@
 .cart-item {
   display: flex;
   gap: 1.2rem;
+
   &:not(:last-child) {
     margin-bottom: 1.2rem;
   }

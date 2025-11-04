@@ -1,5 +1,4 @@
 .header {
-  padding: 1.2rem 0;
   border-bottom: 1px solid #eee;
   background-color: white;
 }
@@ -7,6 +6,7 @@
 .nav-link {
   color: $color-gray-500;
   transition: all 0.3s ease-in-out;
+
   &.active {
     font-weight: 600;
     color: $color-gray-800;

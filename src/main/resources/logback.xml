@@ -1,32 +1,28 @@
 <configuration>
+    <property name="LOG_DIR" value="D:/Java Servlet/zero-star-cafe/logs"/>
+
     <!-- Appender: where the log is written to (console, file, database...) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <!-- Log line format -->
-            <pattern>%d{HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n</pattern>
+            <pattern>%highlight(%d{HH:mm:ss} %-5level) %msg%n</pattern>
         </encoder>
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/app.log</file>
+        <file>${LOG_DIR}/app.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/app-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${LOG_DIR}/app-%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>7</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+            <pattern>[%d{YYYY-mm-dd} %d{HH:mm:ss}] %-5level %logger{36} %msg%n</pattern>
         </encoder>
     </appender>
 
-    <!-- Logger specific to a package or class -->
-    <!-- Logger level by priority: TRACE < DEBUG < INFO < WARN < ERROR  -->
-    <logger name="com.laptrinhweb" level="info" additivity="false">
+    <!-- Root logger (default log for entry application) -->
+    <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
-    </logger>
-
-    <!-- Root logger (default log for entry application) -->
-    <root level="warn">
-        <appender-ref ref="CONSOLE"/>
     </root>
 </configuration>

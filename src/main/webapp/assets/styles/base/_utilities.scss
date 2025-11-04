@@ -80,3 +80,13 @@ $utility-prefixes: (
     overflow: hidden;
   }
 }
+
+.scroll-hidden {
+  overflow: auto;
+  -ms-overflow-style: none; /* IE, Edge legacy */
+}
+
+/* Chrome, Safari, Edge Chromium */
+.scroll-hidden::-webkit-scrollbar {
+  display: none;
+}

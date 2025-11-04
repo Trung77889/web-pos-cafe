@@ -2,14 +2,15 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <base href="${pageContext.request.contextPath}/">
 
-<main class="bg-body py-12">
+<%-- ========= MAIN ========= --%>
+<main class="bg-body py-10">
     <div class="container">
         <div class="row g-5">
-            <!-- Left: Menu & Order -->
+            <%-- Left: Menu & Order --%>
             <div class="col-lg-8">
-                <!-- Bàn & Thời gian -->
-                <div class="d-flex align-items-center mb-3">
-                    <!-- <div
+                <%-- Bàn & Thời gian --%>
+                <div class="d-flex align-items-center mb-4">
+                    <%-- <di%>
                               class="bg-primary d-flex flex-column align-items-center rounded-4 px-3 py-2 me-3 text-white fw-bold"
                            >
                               <span>Còn lại</span>
@@ -22,12 +23,12 @@
                               </span>
                            </div> -->
 
-                    <!-- Search box -->
+                    <%-- Search box --%>
                     <div class="ms-auto w-50 d-flex align-items-center gap-3">
                         <input
                                 type="text"
                                 class="form-control"
-                                placeholder="Uống gì nè bạn ơi?"
+                                placeholder="${general["general.searchBar"]}"
                                 name="search-box"/>
                         <button class="btn btn-primary">
                             <i class="icon-base fi fi-rr-search"></i>
@@ -35,10 +36,10 @@
                     </div>
                 </div>
 
-                <!-- Banner -->
+                <%-- Banner --%>
                 <div
                         id="bannerCarousel"
-                        class="carousel slide mb-3"
+                        class="carousel slide mb-4"
                         data-bs-ride="carousel"
                         data-bs-touch="true">
                     <div class="carousel-inner">
@@ -71,7 +72,7 @@
                     </button>
                 </div>
 
-                <!-- Categories -->
+                <%-- Categories --%>
                 <div class="category-wrapper position-relative">
                     <button class="category-nav-btn prev" id="prevCategory">
                         <i class="icon-sm fi fi-rr-angle-left"></i>
@@ -157,11 +158,11 @@
                     </button>
                 </div>
 
-                <!-- Coffee Menu -->
-                <h4 class="fw-semibold mt-12 mb-5">Danh sách món</h4>
+                <%-- Coffee Menu --%>
+                <h4 class="fw-semibold mt-8 mb-4"> ${general["general.productList"]} </h4>
                 <div class="row row-cols-3 g-4">
                     <div class="col">
-                        <!-- Product card -->
+                        <%-- Product card --%>
                         <div class="card" data-bs-toggle="modal" data-bs-target="#productDetailModal">
                             <img
                                     src="assets/img/product/soda-dao.png"
@@ -184,10 +185,10 @@
                 </div>
             </div>
 
-            <!-- Right: Cart -->
+            <%-- Right: Cart --%>
             <div class="col-lg-4">
                 <div class="bg-white rounded-5 shadow-sm p-4">
-                    <h4 class="fw-bold mb-4">Giỏ Hàng</h4>
+                    <h4 class="fw-bold mb-4"> ${general["general.cart"]} </h4>
                 </div>
             </div>
         </div>

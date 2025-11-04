@@ -4,6 +4,12 @@
          xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
          version="6.0">
 
+    <!--  Context Params  -->
+    <context-param>
+        <param-name>APP_MODE</param-name>
+        <param-value>development</param-value>
+    </context-param>
+
     <!--  Declare Datasource  -->
     <resource-ref>
         <description>DataSource for the database of zero_star_cf</description>
@@ -12,20 +18,25 @@
         <res-auth>Container</res-auth>
     </resource-ref>
 
-    <!--  Error Page Configuration  -->
+    <!--  Default Page Configuration  -->
+    <welcome-file-list>
+        <welcome-file>home</welcome-file>
+    </welcome-file-list>
+
+    <!--  Errors Page Configuration  -->
     <error-page>
         <error-code>404</error-code>
-        <location>/WEB-INF/views/pages/error.jsp</location>
+        <location>/error</location>
     </error-page>
 
     <error-page>
         <error-code>500</error-code>
-        <location>/WEB-INF/views/pages/error.jsp</location>
+        <location>/error</location>
     </error-page>
 
     <error-page>
         <exception-type>java.lang.Exception</exception-type>
-        <location>/WEB-INF/views/pages/error.jsp</location>
+        <location>/error</location>
     </error-page>
 
     <context-param>
