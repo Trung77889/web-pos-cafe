@@ -133,7 +133,7 @@ file.
 
     <!-- Script -->
     <script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/main.js"></script>
+    <script src="assets/js/admin.js"></script>
 </body>
 </html>
 ```
@@ -175,7 +175,7 @@ You can safely use **relative paths** everywhere in JSP:
 ```html
 <!-- Correct usage -->
 <link rel="stylesheet" href="assets/styles/app.css">
-<script src="assets/js/main.js"></script>
+<script src="assets/js/admin.js"></script>
 <img src="assets/img/banner.png" alt="Banner">
 
 <!-- Internal page link -->

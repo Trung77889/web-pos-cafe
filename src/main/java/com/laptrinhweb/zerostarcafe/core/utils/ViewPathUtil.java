@@ -48,6 +48,7 @@ public final class ViewPathUtil {
     public static final class Admin {
         private static final String BASE = "/WEB-INF/views/admin";
         public static final String WELCOME = BASE + "/welcome.jsp";
+        public static final String MAIN = BASE + "/admin-layout.jsp";
         // Add more admin JSPs here as needed
     }
 
