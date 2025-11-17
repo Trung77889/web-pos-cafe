@@ -7,7 +7,6 @@ import de.mkammerer.argon2.Argon2Factory;
  * <h2>Description:</h2>
  * <p>
  * Secure password hashing & verification using <b>Argon2id</b>.
- * Parameters follow OWASP guidance for web backends.
  * </p>
  *
  * <h2>Example Usage:</h2>
@@ -16,11 +15,7 @@ import de.mkammerer.argon2.Argon2Factory;
  * // Convenience with String input (wipes a transient char[] buffer)
  * String hash = PasswordHashUtil.hash("MySecurePass@123");
  * boolean ok   = PasswordHashUtil.verify(hash, "MySecurePass@123");
- *
- * // Prefer char[] in security-critical flows
- * char[] pw = "MySecurePass@123".toCharArray();
- * String h  = PasswordHashUtil.hash(pw);               // wipes pw
- * boolean v = PasswordHashUtil.verify(h, pw);          // wipes pw again}
+ * }
  * </pre>
  *
  * @author Dang Van Trung
@@ -28,7 +23,7 @@ import de.mkammerer.argon2.Argon2Factory;
  * @lastModified 28/10/2025
  * @since 1.0.0
  */
-public final class PasswordHashUtil {
+public final class PasswordUtil {
 
     // Config follows OWASP guidance for web backends
     private static final int ITERATIONS = 3;
@@ -36,7 +31,7 @@ public final class PasswordHashUtil {
     private static final int PARALLELISM = 1;
 
     // Prevent instantiation
-    private PasswordHashUtil() {
+    private PasswordUtil() {
     }
 
     // ===================== Preferred char[] API =====================
@@ -90,11 +85,11 @@ public final class PasswordHashUtil {
      * Convenience wrapper for String input.
      * Converts to char[] internally and wipes the temporary buffer.
      *
-     * @param hash          stored Argon2id hash
      * @param plainPassword plaintext password (String cannot be wiped)
+     * @param hash          stored Argon2id hash
      * @return true if password matches
      */
-    public static boolean verify(String hash, String plainPassword) {
+    public static boolean verify(String plainPassword, String hash) {
         char[] buf = plainPassword.toCharArray();
         return verify(hash, buf);
     }

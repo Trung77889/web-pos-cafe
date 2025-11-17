@@ -1,71 +1,76 @@
-# ☕ Zero Star Coffee – Java Web App (Servlet + JSP + MySQL)
+# ☕ Zero Star Coffee – Java Web Application (Servlet + JSP + MySQL)
 
-Zero Star Coffee is a modular Java web application built with **Jakarta Servlet/JSP**, **Tomcat 11**, and **MySQL**.
-It powers the internal system for Zero Star Coffee — a learning project focusing on full-stack web development,
-scalability, and reusable UI layout.
+Zero Star Coffee is a modular Java web application built with **Jakarta Servlet/JSP**, **Tomcat 11**, and **MySQL**.  
+The project focuses on clean architecture, reusable UI layouts, internationalization (i18n), flash messaging, and a
+structured authentication system.
 
----
+## 1. Project Overview
 
-## 🏗️ Project Overview
+| Component              | Description                                  |
+|------------------------|----------------------------------------------|
+| **Language**           | Java 21+                                     |
+| **Web Container**      | Apache Tomcat 11 (Jakarta EE 10)             |
+| **Database**           | MySQL 8.x                                    |
+| **Connection Pooling** | Apache DBCP2 via Tomcat JNDI                 |
+| **Logging**            | Logback (daily rolling logs)                 |
+| **UI**                 | JSP, Bootstrap 5, SCSS, shared layout system |
 
-| Component              | Description                                        |
-|------------------------|----------------------------------------------------|
-| **Language**           | Java 21+                                           |
-| **Web Container**      | Apache Tomcat 11 (Jakarta EE 10)                   |
-| **Database**           | MySQL 8.x                                          |
-| **Connection Pooling** | Apache Commons DBCP 2 (via Tomcat JNDI DataSource) |
-| **Logging**            | Logback with daily rolling file logs               |
-| **Frontend Tools**     | Bootstrap 5, SCSS, and JSP layout includes         |
-
----
-
-## ⚙️ Local Development Setup
-
-### 1️⃣ Install Requirements
-
-| Component             | Version      | Notes                                 |
-|-----------------------|--------------|---------------------------------------|
-| **JDK**               | 21 or higher | Ensure `JAVA_HOME` is set             |
-| **Apache Tomcat**     | 11.x         | `CATALINA_HOME` must be configured    |
-| **MySQL**             | 8.x          | Create database: `zerostar_cf`        |
-| **MySQL Connector/J** | 8.x          | Copy `.jar` into `$CATALINA_HOME/lib` |
-| **XAMPP (optional)**  | 8.x          | For using MySQL with PhpMyAdmin GUI   |
-
----
-
-### 2️⃣ Compiling SCSS → CSS
-
-From the project root:
-
-```bash
-cd src/main/webapp/assets/styles
-sass ./base.scss ./base.css -w -q
-```
-
-This automatically compiles your main SCSS file into `/assets/styles/app.css`.
-
----
-
-## 🧱 Project Structure
+## 2. Project Structure
 
 ```
 src/main/java/com.laptrinhweb.zerostarcafe/
-├── core/          → DB, security, utilities, validation
-├── domain/        → Business logic (auth, user, etc.)
+│
+├── core/
+│   ├── database/
+│   ├── security/
+│   ├── utils/
+│   └── validation/
+│
+├── domain/
+│   ├── auth/
+│   ├── auth_token/
+│   ├── user/
+│   └── user_role/
+│
 └── web/
-    ├── controllers/ → Servlets (auth, home, error)
-    └── filters/     → Locale, Flash, Logging, Error filters
+    ├── admin/
+    ├── auth/
+    └── common/
+        ├── filters/
+        ├── listeners/
+        ├── ErrorServlet
+        └── FrontController
 ```
 
----
+### JSP + Assets
 
-## 🧩 JSP Layout System
+```
+src/main/webapp/
+├── assets/
+│   ├── client/
+│   ├── admin/
+│   └── shared/
+└── WEB-INF/
+    └── views/
+        ├── client/
+        ├── admin/
+        └── shared/
+```
 
-Zero Star Coffee uses a **universal layout** pattern that centralizes your HTML head, header, footer, and scripts in one
-file.
-****
+### i18n Bundles
 
-### 🧠 `main-layout.jsp`
+```
+src/main/resources/
+└── translate/
+    ├── en-US/
+    └── vi-VN/
+```
+
+## 3. JSP Layout System (Area-Based)
+
+Each area (client, admin, auth) has its own layout file.
+
+### Example: `client/main-layout.jsp`
 
 ```jsp
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -74,86 +79,146 @@ file.
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <jsp:include page="head.jsp"/>
+    <jsp:include page="/WEB-INF/views/shared/head.jsp"/>
+    <link rel="stylesheet" href="assets/client/styles/app.css">
 </head>
+
 <body class="scroll-hidden">
-    <%-- Including the header component --%>
-    <jsp:include page="header.jsp"/>
 
-    <%--  Main content  --%>
-    <jsp:include page="${pageContent}"/>
+    <jsp:include page="/WEB-INF/views/shared/header.jsp"/>
+    <jsp:include page="${requestScope.pageContent}"/>
+    <jsp:include page="/WEB-INF/views/shared/footer.jsp"/>
 
-    <%-- Including the footer component --%>
-    <jsp:include page="footer.jsp"/>
-
-    <%-- Flash message --%>
+    <!-- Flash -->
     <c:if test="${not empty requestScope.messages}">
         <div class="toast-container" hidden>
-            <c:forEach var="msg" items="${messages}">
-                <p data-type="${msg.type}" data-message="${i18n.trans(msg.msgKey)}"></p>
+            <c:forEach var="msg" items="${requestScope.messages}">
+                <p data-type="${msg.type}"
+                   data-message="${sessionScope.i18n.trans(msg.msgKey)}"></p>
             </c:forEach>
         </div>
     </c:if>
 
-    <%-- Script --%>
-    <script>
-        window.__APP_MODE__ = "${initParam.APP_MODE}";
-    </script>
-    <script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="assets/js/base.js"></script>
+    <script src="assets/shared/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="assets/shared/js/base.js"></script>
 </body>
 </html>
 ```
 
-Each page (like `home.jsp` or `error.jsp`) provides only the **page content**.
-The servlet dynamically decides which page to include.
+## 4. JSP Path Rules
 
----
+1. Always declare base tag in your layout:
 
-### 🧭 Example: HomeServlet.java
-
-```java
-
-@WebServlet(name = "HomeRedirectServlet", urlPatterns = "/home")
-public class HomeServlet extends HttpServlet {
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-
-        req.setAttribute("pageTitle", "general.page.home");
-        req.setAttribute("pageContent", PathUtil.Pages.HOME);
-        req.getRequestDispatcher(PathUtil.Layout.MAIN).forward(req, resp);
-    }
-}
 ```
-
----
-
-## Working with Static Resources
-
-Because the `<base>` tag is declared **once** in `main-layout.jsp`:
-
-```jsp
 <base href="${pageContext.request.contextPath}/">
 ```
 
-You can safely use **relative paths** everywhere in JSP:
+2. `jsp:include` must use absolute path:
 
-```html
-<!-- Correct usage -->
-<link rel="stylesheet" href="assets/styles/app.css">
-<script src="assets/js/base.js"></script>
-<img src="assets/img/banner.png" alt="Banner">
-
-<!-- Internal page link -->
-<a href="./">Home</a>
-<a href="logout">Logout</a>
+```
+<jsp:include page="/WEB-INF/views/shared/header.jsp"/>
 ```
 
-💡 No need for `${pageContext.request.contextPath}` on every link.
-Avoid `href="/assets/...` because it skips the context path when deployed under `/zero_star_cafe`.
+3. Asset paths must be relative (because of `<base>`):
 
----
+```
+<link rel="stylesheet" href="assets/client/styles/app.css">
+```
 
-**App URL:**
-`http://localhost:8080/zero_star_cafe/`
+## 5. Flash Message System
+
+### Server-side
+
+```java
+Flash.from(request)
+     .
+
+success("message.register_success")
+     .
+
+send();
+```
+
+### Client-side
+
+Handled automatically by `assets/shared/js/base.js`.
+
+## 6. Internationalization (i18n)
+
+Bundles:
+
+```
+resources/translate/en-US/*.properties
+resources/translate/vi-VN/*.properties
+```
+
+Usage in JSP:
+
+```
+${sessionScope.i18n.trans('form.username')}
+```
+
+## 7. Routing Rules (Front Controller)
+
+| Area   | URL Pattern            |
+|--------|------------------------|
+| Client | `/home`, `/about`, ... |
+| Auth   | `/auth/*`              |
+| Admin  | `/admin/*`             |
+
+## 8. Authentication System (Business Logic Overview)
+
+The authentication design follows a clean separation of responsibilities.
+
+### 1. AuthService (Login/Register)
+
+- Validates username & password
+- Checks account status
+- Returns an `AuthenticatedUser` object
+- Does **not** manage sessions
+
+### 2. AuthSessionService (Session Lifecycle)
+
+Handles:
+
+- Creating a new session after login
+- Storing the authenticated user in session
+- Ensuring **only one active session per user**
+- Revoking old sessions
+- Logout and session cleanup
+
+### 3. AuthSessionManager (Global Session Registry)
+
+Stores:
+
+```
+userId → HttpSession
+```
+
+Used for:
+
+- single-login enforcement
+- central session tracking
+
+### 4. AuthTokenService (Persistent Login)
+
+- Generates long-lived tokens (“auth_token”)
+- Validates token from cookies
+- Restores login without password
+- Creates a new session if token is valid
+
+### 5. AuthSessionListener (App Startup)
+
+Initializes all authentication-related services and registers them inside `ServletContext`.
+
+## 9. SCSS Build
+
+```
+sass ./app.scss ./app.css -w -q
+```
+
+## 10. Application URL
+
+```
+http://localhost:8080/zero_star_cafe/
+```
