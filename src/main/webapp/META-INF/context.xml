@@ -5,6 +5,7 @@
     <Resource name="jdbc/ZeroStarDB"
               auth="Container"
               type="javax.sql.DataSource"
+              factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
 
               driverClassName="com.mysql.cj.jdbc.Driver"
               url="jdbc:mysql://localhost:3306/zerostar_cf"
@@ -12,7 +13,7 @@
               password=""
 
               initialSize="5"
-              maxTotal="30"
+              maxActive="30"
               minIdle="5"
               maxIdle="15"
               maxWaitMillis="30000"
@@ -23,11 +24,14 @@
               timeBetweenEvictionRunsMillis="600000"
               testWhileIdle="true"
 
-              removeAbandonedOnBorrow="true"
-              removeAbandonedOnMaintenance="true"
+              removeAbandoned="true"
+              removeAbandonedTimeout="60"
 
               defaultTransactionIsolation="REPEATABLE_READ"
               poolPreparedStatements="true"
               maxOpenPreparedStatements="100"
     />
+
+    <!--    <Manager className="org.redisson.tomcat.RedissonSessionManager"-->
+    <!--             configPath="${catalina.base}/conf/redisson.yaml"/>-->
 </Context>

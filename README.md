@@ -33,26 +33,13 @@ scalability, and reusable UI layout.
 
 ---
 
-### 2️⃣ Database Connection Check
-
-Visit:
-👉 **[http://localhost:8080/zero_star_cafe/health](http://localhost:8080/zero_star_cafe/health)**
-
-You should see a “✅ Database connection established” message confirming that:
-
-* JDBC driver is available
-* JNDI DataSource is configured
-* MySQL is reachable
-
----
-
-### 3️⃣ Compiling SCSS → CSS
+### 2️⃣ Compiling SCSS → CSS
 
 From the project root:
 
 ```bash
 cd src/main/webapp/assets/styles
-sass ./app.scss ./app.css -w -q
+sass ./base.scss ./base.css -w -q
 ```
 
 This automatically compiles your main SCSS file into `/assets/styles/app.css`.
@@ -62,43 +49,12 @@ This automatically compiles your main SCSS file into `/assets/styles/app.css`.
 ## 🧱 Project Structure
 
 ```
-src/
-├── main/
-│   ├── java/
-│   │   └── com.laptrinhweb.zerostarcafe/
-│   │       ├── controller/
-│   │       │   ├── HomeServlet.java
-│   │       │   ├── LoginServlet.java
-│   │       │   ├── LogoutServlet.java
-│   │       │   └── RegisterServlet.java
-│   │       ├── dao/
-│   │       ├── model/
-│   │       └── utils/
-│   │           ├── AppLogger.java
-│   │           ├── DBConnection.java
-│   │           └── HealthCheckServlet.java
-│   │
-│   ├── resources/
-│   │
-│   └── webapp/
-│       ├── assets/
-│       │   ├── styles/
-│       │   ├── js/
-│       │   └── img/
-│       ├── WEB-INF/
-│       │   ├── views/
-│       │   │   ├── layout/
-│       │   │   │   ├── head.jsp
-│       │   │   │   ├── header.jsp
-│       │   │   │   ├── footer.jsp
-│       │   │   │   └── main-layout.jsp
-│       │   │   ├── pages/
-│       │   │   │   ├── home.jsp
-│       │   │   │   └── error.jsp
-│       │   │   ├── admin/
-│       │   │   └── user/
-│       │   └── web.xml
-│       └── META-INF/
+src/main/java/com.laptrinhweb.zerostarcafe/
+├── core/          → DB, security, utilities, validation
+├── domain/        → Business logic (auth, user, etc.)
+└── web/
+    ├── controllers/ → Servlets (auth, home, error)
+    └── filters/     → Locale, Flash, Logging, Error filters
 ```
 
 ---
@@ -107,11 +63,11 @@ src/
 
 Zero Star Coffee uses a **universal layout** pattern that centralizes your HTML head, header, footer, and scripts in one
 file.
+****
 
 ### 🧠 `main-layout.jsp`
 
 ```jsp
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <base href="${pageContext.request.contextPath}/">
 
@@ -120,20 +76,31 @@ file.
 <head>
     <jsp:include page="head.jsp"/>
 </head>
-<body>
+<body class="scroll-hidden">
     <%-- Including the header component --%>
     <jsp:include page="header.jsp"/>
 
-    <main class="container">
-        <jsp:include page="${pageContent}"/>
-    </main>
+    <%--  Main content  --%>
+    <jsp:include page="${pageContent}"/>
 
     <%-- Including the footer component --%>
     <jsp:include page="footer.jsp"/>
 
-    <!-- Script -->
+    <%-- Flash message --%>
+    <c:if test="${not empty requestScope.messages}">
+        <div class="toast-container" hidden>
+            <c:forEach var="msg" items="${messages}">
+                <p data-type="${msg.type}" data-message="${i18n.trans(msg.msgKey)}"></p>
+            </c:forEach>
+        </div>
+    </c:if>
+
+    <%-- Script --%>
+    <script>
+        window.__APP_MODE__ = "${initParam.APP_MODE}";
+    </script>
     <script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/base.js"></script>
 </body>
 </html>
 ```
@@ -147,15 +114,15 @@ The servlet dynamically decides which page to include.
 
 ```java
 
-@WebServlet(name = "HomeServlet", urlPatterns = {"", "/"})
+@WebServlet(name = "HomeRedirectServlet", urlPatterns = "/home")
 public class HomeServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        req.setAttribute("pageTitle", "Trang chủ Zero Star Cafe");
-        req.setAttribute("pageContent", "/WEB-INF/views/pages/home.jsp");
-        req.getRequestDispatcher("/WEB-INF/views/layout/main-layout.jsp")
-                .forward(req, resp);
+
+        req.setAttribute("pageTitle", "general.page.home");
+        req.setAttribute("pageContent", PathUtil.Pages.HOME);
+        req.getRequestDispatcher(PathUtil.Layout.MAIN).forward(req, resp);
     }
 }
 ```
@@ -175,7 +142,7 @@ You can safely use **relative paths** everywhere in JSP:
 ```html
 <!-- Correct usage -->
 <link rel="stylesheet" href="assets/styles/app.css">
-<script src="assets/js/main.js"></script>
+<script src="assets/js/base.js"></script>
 <img src="assets/img/banner.png" alt="Banner">
 
 <!-- Internal page link -->
@@ -187,16 +154,6 @@ You can safely use **relative paths** everywhere in JSP:
 Avoid `href="/assets/...` because it skips the context path when deployed under `/zero_star_cafe`.
 
 ---
-
-## 🚀 Run & Access
-
-| Path          | Description                                 |
-|---------------|---------------------------------------------|
-| `/`           | Home Page (via HomeServlet)                 |
-| `/login`      | Login Page                                  |
-| `/logout`     | Logout (invalidate session + redirect home) |
-| `/health`     | Health check servlet                        |
-| `/assets/...` | Static resources (CSS, JS, images)          |
 
 **App URL:**
 `http://localhost:8080/zero_star_cafe/`

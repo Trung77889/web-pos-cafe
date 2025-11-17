@@ -1,6 +1,6 @@
 package com.laptrinhweb.zerostarcafe.core.database;
 
-import com.laptrinhweb.zerostarcafe.core.utils.AppLoggerUtil;
+import com.laptrinhweb.zerostarcafe.core.utils.LoggerUtil;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -9,50 +9,26 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * Description: Utility class for getting database connections via the Tomcat JNDI DataSource.
- * <p>
- * This class retrieves the DataSource configured in Tomcat's {@code context.xml}
- * (usually declared as {@code <Resource name="jdbc/ZeroStarDB" ... />})
- * and provides a single static method {@link #getConnection()} to get pooled
- * connections instead of creating new ones for each request.
- * </p>
+ * Description:
+ * Utility class for retrieving database connections from the Tomcat-managed JNDI DataSource.
  *
- * <h2>Configuration Requirements</h2>
- * <ul>
- *   <li>The MySQL JDBC driver must be placed in <code>$CATALINA_HOME/lib</code>.</li>
- *   <li>The DataSource must be declared in <code>META-INF/context.xml</code>:</li>
- * </ul>
- *
- * <pre>{@code
- * <Resource name="jdbc/ZeroStarDB"
- *           auth="Container"
- *           type="javax.sql.DataSource"
- *           driverClassName="com.mysql.cj.jdbc.Driver"
- *           url="jdbc:mysql://localhost:3306/zerostar_cf"
- *           username="root"
- *           password=""
- *           ...
- * }</pre>
- *
- * <p>
- * When deployed, Tomcat automatically manages connection pooling through
- * Apache Commons DBCP 2. Calling {@link #getConnection()} will always return a
- * connection from that pool.
- * </p>
- *
- * <h2> Example Usage: Always use try-with-resources for JDBC code </h2>
+ * <h2>Example Usage:</h2>
  * <pre>{@code
  * try (Connection conn = DBConnection.getConnection()) {
- *     PreparedStatement stmt = conn.prepareStatement("SELECT * FROM users");
- *     ResultSet rs = stmt.executeQuery();
  *     ...
  * }
  * }</pre>
+ * <p>
+ * Notes:
+ * - Requires MySQL driver inside $CATALINA_HOME/lib
+ * - Requires DataSource defined in context.xml with name "jdbc/ZeroStarDB"
  *
  * @author Dang Van Trung
- * @date 21/10/2025
+ * @version 1.0.1
+ * @lastModified 16/11/2025
+ * @since 1.0.0
  */
-public class DBConnection {
+public final class DBConnection {
 
     /**
      * The JNDI (Java Naming and Directory Interface)
@@ -65,16 +41,15 @@ public class DBConnection {
     static {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            AppLoggerUtil.info(DBConnection.class, "✅ JDBC driver detected in classpath.");
+            LoggerUtil.info(DBConnection.class, "✅ MySQL JDBC driver loaded.");
         } catch (ClassNotFoundException e) {
-            AppLoggerUtil.error(DBConnection.class,
-                    "❌ JDBC driver not found! Please copy 'mysql-connector-j-8.x.x.jar' into $CATALINA_HOME/lib.", e);
+            LoggerUtil.error(DBConnection.class,
+                    "❌ MySQL JDBC driver not found. Add 'mysql-connector-j' to $CATALINA_HOME/lib.", e);
         }
     }
 
     // Prevent instantiation
     private DBConnection() {
-        throw new UnsupportedOperationException("Utility class cannot be instantiated.");
     }
 
     /**
@@ -88,13 +63,19 @@ public class DBConnection {
             InitialContext ctx = new InitialContext();
             DataSource ds = (DataSource) ctx.lookup(JNDI_NAME);
             Connection connection = ds.getConnection();
-            AppLoggerUtil.info(DBConnection.class, "✅ Database connection acquired from DataSource pool.");
+
+            LoggerUtil.info(DBConnection.class,
+                    "✅ DBConnection acquired from pool.");
             return connection;
+
         } catch (NamingException e) {
-            AppLoggerUtil.error(DBConnection.class, "❌ Failed to lookup DataSource: " + JNDI_NAME, e);
+            LoggerUtil.error(DBConnection.class,
+                    "❌ Failed to lookup DataSource: " + JNDI_NAME, e);
             throw new SQLException("DataSource lookup failed.", e);
+
         } catch (SQLException e) {
-            AppLoggerUtil.error(DBConnection.class, "❌ Failed to get connection from DataSource.", e);
+            LoggerUtil.error(DBConnection.class,
+                    "❌ Failed to get connection from DataSource.", e);
             throw e;
         }
     }
