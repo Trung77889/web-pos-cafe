@@ -26,8 +26,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * }</pre>
  *
  * @author Dang Van Trung
- * @version 1.0.0
- * @lastModified 16/11/2025
+ * @version 1.1.0
+ * @lastModified 18/11/2025
  * @since 1.0.0
  */
 public final class AuthSessionManager {
@@ -38,6 +38,11 @@ public final class AuthSessionManager {
     // ===== Constructor ====
     public AuthSessionManager(ConcurrentHashMap<Long, HttpSession> userSessions) {
         this.userSessions = userSessions;
+    }
+
+    // ==== Getter =====
+    public ConcurrentHashMap<Long, HttpSession> getUserSessions() {
+        return userSessions;
     }
 
     // ===== Public Methods ====
