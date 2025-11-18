@@ -154,7 +154,7 @@ public class HomeServlet extends HttpServlet {
             throws ServletException, IOException {
         req.setAttribute("pageTitle", "Trang chủ Zero Star Cafe");
         req.setAttribute("pageContent", "/WEB-INF/views/pages/home.jsp");
-        req.getRequestDispatcher("/WEB-INF/views/layout/main-layout.jsp")
+        req.getRequestDispatcher("/WEB-INF/views/layout/main-admin-layout.jsp")
                 .forward(req, resp);
     }
 }

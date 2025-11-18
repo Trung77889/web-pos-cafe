@@ -8,30 +8,28 @@
     <meta content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
           name="viewport"/>
     <meta content="ie=edge" http-equiv="X-UA-Compatible"/>
-    <title><c:out value="${i18n.trans(pageTitle)}" default="Zero Star Coffee"/></title>
+    <title><c:out value="${i18n.trans(pageTitle)}" default="Admin | Zero Star Coffee"/></title>
 
-    <%-- Google Font --%>
-    <link href="https://fonts.googleapis.com" rel="preconnect"/>
-    <link crossorigin href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
-          rel="stylesheet"/>
+    <%-- AJAX --%>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css"/>
 
-    <%-- Flat icon --%>
-    <link rel="stylesheet"
-          href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css"/>
+    <%-- Thư viện cho xuất file excel --%>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
+
+    <%-- JQuery --%>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+            integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <%-- Style --%>
-    <link href="assets/client/styles/app.css" rel="stylesheet"/>
+    <link rel='stylesheet' href='assets/shared/styles/base.css'>
+    <link rel="stylesheet" href="assets/admin/styles/admin.css">
 </head>
 <body class="scroll-hidden">
-    <%-- Including the header component --%>
-    <jsp:include page="/WEB-INF/views/client/layouts/header.jsp"/>
-
     <%--  Main content  --%>
     <jsp:include page="${requestScope.pageContent}"/>
-
-    <%-- Including the footer component --%>
-    <jsp:include page="/WEB-INF/views/client/layouts/footer.jsp"/>
 
     <%-- Flash message --%>
     <c:if test="${not empty requestScope.messages}">
@@ -50,5 +48,6 @@
     </script>
     <script src="assets/shared/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="assets/shared/js/base.js"></script>
+    <script src="assets/admin/js/admin.js"></script>
 </body>
 </html>
