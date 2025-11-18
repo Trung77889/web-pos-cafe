@@ -29,6 +29,7 @@
     </div>
 </div>
 
+<%--resolve conflict--%>
 <div class="main-content">
     <!-- Dashboard (Chứa Tổng quan doanh thu, đơn hàng, sản phẩm đã bán,)-->
     <div id="dashboard" class="page-content active">
