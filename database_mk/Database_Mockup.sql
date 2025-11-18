@@ -1,5 +1,7 @@
 -- SCHEMA
-CREATE DATABASE IF NOT EXISTS `zerostar_cf` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS `zerostar_cf`
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
 USE `zerostar_cf`;
 
 -- Lookup roles (only code needed; UI i18n will translate)
@@ -9,7 +11,7 @@ CREATE TABLE role_codes (
 ) ENGINE=InnoDB;
 
 CREATE TABLE users (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
   email VARCHAR(190) UNIQUE,
   username VARCHAR(64) NOT NULL UNIQUE,
   password_hash VARCHAR(255),
@@ -18,22 +20,45 @@ CREATE TABLE users (
   status VARCHAR(16) NOT NULL DEFAULT 'active',
   is_super_admin BOOLEAN NOT NULL DEFAULT FALSE,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+CREATE TABLE auth_tokens (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    auth_hash CHAR(64) NOT NULL,
+    device_id VARCHAR(64) NOT NULL,
+    status ENUM('ACTIVE', 'REVOKED', 'EXPIRED') NOT NULL,
+    expired_at DATETIME NOT NULL,
+    last_rotated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ip_last VARCHAR(45) NULL,
+    user_agent VARCHAR(255) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    revoked_at DATETIME NULL,
+    revoked_reason VARCHAR(255) NULL,
+    CONSTRAINT uk_auth_tokens_auth_hash UNIQUE (auth_hash),
+    KEY idx_auth_tokens_user_status (user_id, status),
+    KEY idx_auth_tokens_hash_device_status (auth_hash, device_id, status),
+    CONSTRAINT fk_auth_tokens_users
+        FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB;
+
+
 CREATE TABLE stores (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(120) NOT NULL,
   address VARCHAR(255),
   status VARCHAR(16) NOT NULL DEFAULT 'open',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 CREATE TABLE user_store_roles (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  user_id BIGINT NOT NULL,
-  store_id BIGINT NOT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  store_id BIGINT UNSIGNED NOT NULL,
   role_code VARCHAR(32) NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_user_store (user_id, store_id),
@@ -44,15 +69,15 @@ CREATE TABLE user_store_roles (
 ) ENGINE=InnoDB;
 
 CREATE TABLE categories (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(80) NOT NULL,
   order_index INT NOT NULL DEFAULT 1,
   is_active BOOLEAN NOT NULL DEFAULT TRUE
 ) ENGINE=InnoDB;
 
 CREATE TABLE menu_items (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  category_id BIGIbooking_itemsNT NOT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  category_id BIGINT UNSIGNED NOT NULL,
   name VARCHAR(120) NOT NULL,
   image_url VARCHAR(255),
   description TEXT,
@@ -64,7 +89,7 @@ CREATE TABLE menu_items (
 ) ENGINE=InnoDB;
 
 CREATE TABLE option_groups (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(80) NOT NULL,
   type VARCHAR(32) NOT NULL,
   is_required BOOLEAN NOT NULL DEFAULT FALSE,
@@ -73,8 +98,8 @@ CREATE TABLE option_groups (
 ) ENGINE=InnoDB;
 
 CREATE TABLE option_values (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  option_group_id BIGINT NOT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  option_group_id BIGINT UNSIGNED NOT NULL,
   name VARCHAR(80) NOT NULL,
   price_delta INT NOT NULL DEFAULT 0,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -82,18 +107,18 @@ CREATE TABLE option_values (
 ) ENGINE=InnoDB;
 
 CREATE TABLE item_option_groups (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  menu_item_id BIGINT NOT NULL,
-  option_group_id BIGINT NOT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  menu_item_id BIGINT UNSIGNED NOT NULL,
+  option_group_id BIGINT UNSIGNED NOT NULL,
   UNIQUE KEY uq_item_group (menu_item_id, option_group_id),
   CONSTRAINT fk_iog_item FOREIGN KEY (menu_item_id) REFERENCES menu_items(id),
   CONSTRAINT fk_iog_group FOREIGN KEY (option_group_id) REFERENCES option_groups(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE store_menu_items (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  store_id BIGINT NOT NULL,
-  menu_item_id BIGINT NOT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  store_id BIGINT UNSIGNED NOT NULL,
+  menu_item_id BIGINT UNSIGNED NOT NULL,
   in_menu BOOLEAN NOT NULL DEFAULT TRUE,
   availability_status ENUM('available','sold_out') NOT NULL DEFAULT 'available',
   sold_out_until DATETIME NULL,
@@ -104,15 +129,15 @@ CREATE TABLE store_menu_items (
 ) ENGINE=InnoDB;
 
 CREATE TABLE price_change_request_items (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  store_id BIGINT NOT NULL,
-  menu_item_id BIGINT NOT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  store_id BIGINT UNSIGNED NOT NULL,
+  menu_item_id BIGINT UNSIGNED NOT NULL,
   requested_price INT NOT NULL,
   valid_from DATETIME NOT NULL,
   valid_to DATETIME NOT NULL,
   status ENUM('pending','approved','rejected','canceled') NOT NULL DEFAULT 'pending',
-  requested_by BIGINT NOT NULL,
-  reviewed_by BIGINT NULL,
+  requested_by BIGINT UNSIGNED NOT NULL,
+  reviewed_by BIGINT UNSIGNED NULL,
   review_note VARCHAR(255),
   requested_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   reviewed_at DATETIME NULL,
@@ -123,13 +148,13 @@ CREATE TABLE price_change_request_items (
 ) ENGINE=InnoDB;
 
 CREATE TABLE store_item_price_schedules (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  store_id BIGINT NOT NULL,
-  menu_item_id BIGINT NOT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  store_id BIGINT UNSIGNED NOT NULL,
+  menu_item_id BIGINT UNSIGNED NOT NULL,
   price INT NOT NULL,
   valid_from DATETIME NOT NULL,
   valid_to DATETIME NOT NULL,
-  approved_by BIGINT NOT NULL,
+  approved_by BIGINT UNSIGNED NOT NULL,
   approved_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY idx_price_window (store_id, menu_item_id, valid_from, valid_to),
   CONSTRAINT fk_sips_store FOREIGN KEY (store_id) REFERENCES stores(id),
@@ -138,9 +163,9 @@ CREATE TABLE store_item_price_schedules (
 ) ENGINE=InnoDB;
 
 CREATE TABLE store_option_values (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  store_id BIGINT NOT NULL,
-  option_value_id BIGINT NOT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  store_id BIGINT UNSIGNED NOT NULL,
+  option_value_id BIGINT UNSIGNED NOT NULL,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   availability_status ENUM('available','sold_out') NOT NULL DEFAULT 'available',
   sold_out_until DATETIME NULL,
@@ -151,8 +176,8 @@ CREATE TABLE store_option_values (
 ) ENGINE=InnoDB;
 
 CREATE TABLE zones (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  store_id BIGINT NOT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  store_id BIGINT UNSIGNED NOT NULL,
   name VARCHAR(80) NOT NULL,
   seat_fee_type ENUM('hourly','fixed','none') NOT NULL DEFAULT 'hourly',
   seat_fee_value INT NOT NULL DEFAULT 0,
@@ -160,8 +185,8 @@ CREATE TABLE zones (
 ) ENGINE=InnoDB;
 
 CREATE TABLE tables_ (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  zone_id BIGINT NOT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  zone_id BIGINT UNSIGNED NOT NULL,
   table_uid VARCHAR(40) NOT NULL,
   capacity INT NOT NULL DEFAULT 2,
   chair_type VARCHAR(32),
@@ -171,10 +196,10 @@ CREATE TABLE tables_ (
 ) ENGINE=InnoDB;
 
 CREATE TABLE bookings (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  store_id BIGINT NOT NULL,
-  table_id BIGINT NOT NULL,
-  user_id BIGINT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  store_id BIGINT UNSIGNED NOT NULL,
+  table_id BIGINT UNSIGNED NOT NULL,
+  user_id BIGINT UNSIGNED NULL,
   start_at DATETIME NOT NULL,
   end_at DATETIME NOT NULL,
   status ENUM('pending','confirmed','seated','no_show','canceled','expired') NOT NULL DEFAULT 'pending',
@@ -188,9 +213,9 @@ CREATE TABLE bookings (
 ) ENGINE=InnoDB;
 
 CREATE TABLE booking_items (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  booking_id BIGINT NOT NULL,
-  menu_item_id BIGINT NOT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  booking_id BIGINT UNSIGNED NOT NULL,
+  menu_item_id BIGINT UNSIGNED NOT NULL,
   qty INT NOT NULL DEFAULT 1,
   unit_price_snapshot INT NOT NULL,
   payment_status ENUM('unpaid','paid','canceled') NOT NULL DEFAULT 'unpaid',
@@ -200,11 +225,11 @@ CREATE TABLE booking_items (
 ) ENGINE=InnoDB;
 
 CREATE TABLE orders (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  store_id BIGINT NOT NULL,
-  table_id BIGINT NULL,
-  user_id BIGINT NULL,
-  booking_id BIGINT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  store_id BIGINT UNSIGNED NOT NULL,
+  table_id BIGINT UNSIGNED NULL,
+  user_id BIGINT UNSIGNED NULL,
+  booking_id BIGINT UNSIGNED NULL,
   status ENUM('open','served','partial_paid','paid','void') NOT NULL DEFAULT 'open',
   opened_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   closed_at DATETIME NULL,
@@ -216,9 +241,9 @@ CREATE TABLE orders (
 ) ENGINE=InnoDB;
 
 CREATE TABLE order_items (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  order_id BIGINT NOT NULL,
-  menu_item_id BIGINT NOT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  order_id BIGINT UNSIGNED NOT NULL,
+  menu_item_id BIGINT UNSIGNED NOT NULL,
   qty INT NOT NULL DEFAULT 1,
   unit_price_snapshot INT NOT NULL,
   note VARCHAR(160),
@@ -227,11 +252,11 @@ CREATE TABLE order_items (
 ) ENGINE=InnoDB;
 
 CREATE TABLE payments (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
   source_type ENUM('order','booking') NOT NULL,
-  order_id BIGINT NULL,
-  booking_id BIGINT NULL,
-  user_id BIGINT NULL,
+  order_id BIGINT UNSIGNED NULL,
+  booking_id BIGINT UNSIGNED NULL,
+  user_id BIGINT UNSIGNED NULL,
   method ENUM('cash','card','momo','vnpay','zalo','wallet') NOT NULL,
   type ENUM('deposit','prepaid','remaining','refund') NOT NULL,
   status ENUM('pending','paid','failed','refunded') NOT NULL DEFAULT 'pending',
@@ -246,19 +271,19 @@ CREATE TABLE payments (
 ) ENGINE=InnoDB;
 
 CREATE TABLE loyalty_accounts (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  user_id BIGINT NOT NULL UNIQUE,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL UNIQUE,
   points_balance INT NOT NULL DEFAULT 0,
   CONSTRAINT fk_la_user FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE loyalty_transactions (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  user_id BIGINT NOT NULL,
-  store_id BIGINT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  store_id BIGINT UNSIGNED NULL,
   type ENUM('earn','redeem','expire','adjust') NOT NULL,
   points INT NOT NULL,
-  payment_id BIGINT NULL,
+  payment_id BIGINT UNSIGNED NULL,
   expiry_date DATE NULL,
   reason VARCHAR(160),
   occurred_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -268,10 +293,10 @@ CREATE TABLE loyalty_transactions (
 ) ENGINE=InnoDB;
 
 CREATE TABLE review_stores (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  user_id BIGINT NOT NULL,
-  store_id BIGINT NOT NULL,
-  order_id BIGINT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  store_id BIGINT UNSIGNED NOT NULL,
+  order_id BIGINT UNSIGNED NULL,
   rating INT NOT NULL,
   content TEXT,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -281,11 +306,11 @@ CREATE TABLE review_stores (
 ) ENGINE=InnoDB;
 
 CREATE TABLE review_items (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  user_id BIGINT NOT NULL,
-  menu_item_id BIGINT NOT NULL,
-  store_id BIGINT NULL,
-  order_item_id BIGINT NULL,
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  menu_item_id BIGINT UNSIGNED NOT NULL,
+  store_id BIGINT UNSIGNED NULL,
+  order_item_id BIGINT UNSIGNED NULL,
   rating INT NOT NULL,
   content TEXT,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -1,0 +1,32 @@
+package com.laptrinhweb.zerostarcafe.domain.auth.dto;
+
+import com.laptrinhweb.zerostarcafe.core.validation.ValidationResult;
+import com.laptrinhweb.zerostarcafe.domain.auth.service.AuthValidator;
+
+import java.util.Map;
+
+/**
+ * <h2>Description:</h2>
+ * <p>
+ * Represents the login form input submitted by user.
+ * Provides built-in validation using {@link AuthValidator}
+ * </p>
+ *
+ * @author Dang Van Trung
+ * @version 1.0.0
+ * @lastModified 12/11/2025
+ * @since 1.0.0
+ */
+public record LoginDTO(
+        String username,
+        String password
+) {
+
+    public Map<String, String> formState() {
+        return Map.of("loginUsername", username);
+    }
+
+    public ValidationResult validate() {
+        return AuthValidator.loginCheck(username, password);
+    }
+}

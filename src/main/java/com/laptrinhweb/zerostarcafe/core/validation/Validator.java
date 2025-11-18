@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  * <h2>Example Usage:</h2>
  * <pre>
  * {@code
- * boolean isValidEmail = new Validator(email)
+ * boolean isValidEmail = new AuthValidator(email)
  *                          .notEmpty()
  *                          .email()
  *                          .maxLength(100)

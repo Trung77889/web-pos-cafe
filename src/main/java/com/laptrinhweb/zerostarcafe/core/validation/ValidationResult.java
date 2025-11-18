@@ -14,7 +14,7 @@ import java.util.Map;
  * <h2>Example Usage:</h2>
  * <pre>
  * {@code
- * ValidationResult result = UserValidator.validateRegistration(email, username, password);
+ * ValidationResult result = AuthValidator.registerCheck(email, username, password);
  * if (!result.valid()) {
  *     // Error handling...
  * }

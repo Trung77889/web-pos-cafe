@@ -1,0 +1,96 @@
+[2025-11-18 07:38:33] INFO  c.l.z.web.common.filters.LogFilter GET  /zero_star_cafe/                         | 302 |    0 ms
+[2025-11-18 07:38:35] INFO  c.l.z.web.common.filters.LogFilter GET  /zero_star_cafe/home                     | 200 | 1630 ms
+[2025-11-18 09:59:13] INFO  c.l.z.web.common.filters.LogFilter GET  /zero_star_cafe/                         | 302 |    1 ms
+[2025-11-18 09:59:15] INFO  c.l.z.web.common.filters.LogFilter GET  /zero_star_cafe/home                     | 200 | 2430 ms
+[2025-11-18 09:59:25] INFO  c.l.z.web.common.filters.LogFilter POST /zero_star_cafe/auth/login               | 302 |   31 ms
+[2025-11-18 09:59:25] INFO  c.l.z.web.common.filters.LogFilter GET  /zero_star_cafe/home                     | 200 |   51 ms
+[2025-11-18 09:59:26] INFO  c.l.z.web.common.filters.LogFilter POST /zero_star_cafe/auth/login               | 302 |    0 ms
+[2025-11-18 09:59:26] INFO  c.l.z.web.common.filters.LogFilter GET  /zero_star_cafe/home                     | 200 |   11 ms
+[2025-11-18 10:02:43] INFO  c.l.z.web.common.filters.LogFilter GET  /zero_star_cafe/home                     | 200 | 3562 ms
+[2025-11-18 10:02:47] INFO  c.l.z.web.common.filters.LogFilter GET  /zero_star_cafe/home                     | 200 |   22 ms
+[2025-11-18 10:02:50] INFO  c.l.z.web.common.filters.LogFilter POST /zero_star_cafe/auth/login               | 302 |   22 ms
+[2025-11-18 10:02:50] ERROR c.l.z.web.common.filters.ErrorFilter Unhandled exception
+org.apache.jasper.JasperException: An exception occurred processing [/WEB-INF/views/client/layouts/main-layout.jsp] at line [26]
+
+23:     <c:if test="${not empty requestScope.messages}">
+24:         <div class="toast-container" hidden>
+25:             <c:forEach var="msg" items="${requestScope.messages}">
+26:                 <p data-type="${msg.type}"
+27:                    data-message="${sessionScope.i18n.trans(msg.msgKey)}">
+28:                 </p>
+29:             </c:forEach>
+
+
+Stacktrace:
+	at org.apache.jasper.servlet.JspServletWrapper.handleJspException(JspServletWrapper.java:570)
+	at org.apache.jasper.servlet.JspServletWrapper.service(JspServletWrapper.java:456)
+	at org.apache.jasper.servlet.JspServlet.serviceJspFile(JspServlet.java:350)
+	at org.apache.jasper.servlet.JspServlet.service(JspServlet.java:301)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.apache.catalina.core.ApplicationDispatcher.invoke(ApplicationDispatcher.java:610)
+	at org.apache.catalina.core.ApplicationDispatcher.processRequest(ApplicationDispatcher.java:392)
+	at org.apache.catalina.core.ApplicationDispatcher.doForward(ApplicationDispatcher.java:321)
+	at org.apache.catalina.core.ApplicationDispatcher.forward(ApplicationDispatcher.java:266)
+	at com.laptrinhweb.zerostarcafe.web.common.FrontController.service(FrontController.java:126)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at com.laptrinhweb.zerostarcafe.web.common.filters.LogFilter.doFilter(LogFilter.java:41)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at com.laptrinhweb.zerostarcafe.web.common.filters.LocaleFilter.doFilter(LocaleFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at com.laptrinhweb.zerostarcafe.web.common.filters.FlashFilter.doFilter(FlashFilter.java:43)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at com.laptrinhweb.zerostarcafe.web.common.filters.ErrorFilter.doFilter(ErrorFilter.java:31)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at com.laptrinhweb.zerostarcafe.web.common.filters.AuthFilter.doFilter(AuthFilter.java:138)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:88)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83)
+	at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:654)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:342)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:399)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1774)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:973)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:491)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: jakarta.el.PropertyNotFoundException: Property [type] not found on type [com.laptrinhweb.zerostarcafe.core.utils.Flash$Message]
+	at jakarta.el.BeanELResolver$BeanProperties.get(BeanELResolver.java:261)
+	at jakarta.el.BeanELResolver.property(BeanELResolver.java:330)
+	at jakarta.el.BeanELResolver.getValue(BeanELResolver.java:99)
+	at org.apache.jasper.el.JasperELResolver.getValue(JasperELResolver.java:128)
+	at org.apache.el.parser.AstValue.getValue(AstValue.java:161)
+	at org.apache.el.ValueExpressionImpl.getValue(ValueExpressionImpl.java:150)
+	at org.apache.jasper.runtime.PageContextImpl.proprietaryEvaluate(PageContextImpl.java:666)
+	at org.apache.jsp.WEB_002dINF.views.client.layouts.main_002dlayout_jsp._jspx_meth_c_005fforEach_005f0(main_002dlayout_jsp.java:258)
+	at org.apache.jsp.WEB_002dINF.views.client.layouts.main_002dlayout_jsp._jspx_meth_c_005fif_005f0(main_002dlayout_jsp.java:222)
+	at org.apache.jsp.WEB_002dINF.views.client.layouts.main_002dlayout_jsp._jspService(main_002dlayout_jsp.java:172)
+	at org.apache.jasper.runtime.HttpJspBase.service(HttpJspBase.java:62)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.jasper.servlet.JspServletWrapper.service(JspServletWrapper.java:428)
+	... 51 common frames omitted
+[2025-11-18 10:02:50] WARN  c.l.z.web.common.filters.ErrorFilter Response already committed.
+[2025-11-18 10:05:16] INFO  c.l.z.web.common.filters.LogFilter GET  /zero_star_cafe/home                     | 200 | 5426 ms
+[2025-11-18 10:05:22] INFO  c.l.z.web.common.filters.LogFilter GET  /zero_star_cafe/                         | 302 |    1 ms
+[2025-11-18 10:05:23] INFO  c.l.z.web.common.filters.LogFilter GET  /zero_star_cafe/home                     | 200 |   29 ms
