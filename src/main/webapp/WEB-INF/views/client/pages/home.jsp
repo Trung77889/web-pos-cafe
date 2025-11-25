@@ -184,7 +184,6 @@
                     </div>
                 </div>
             </div>
-
             <%-- Right: Cart --%>
             <div class="col-lg-4">
                 <div class="bg-white rounded-5 shadow-sm p-4">
@@ -198,8 +197,8 @@
 <%-- ========= MODAL ========= --%>
 <div id="modal-template" hidden>
     <!-- Preload template -->
-    <jsp:include page="../../shared/modals/login.jsp"/>
     <jsp:include page="../modals/register.jsp"/>
+    <jsp:include page="../modals/login.jsp"/>
 
     <!-- Open modal if needed -->
     <c:if test="${not empty requestScope.openModal}">

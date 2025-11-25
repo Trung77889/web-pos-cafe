@@ -5,6 +5,7 @@
 <c:set var="exception" value="${requestScope['jakarta.servlet.error.exception']}"/>
 <c:set var="message" value="${requestScope['jakarta.servlet.error.message']}"/>
 <c:set var="requestUri" value="${requestScope['jakarta.servlet.error.request_uri']}"/>
+<c:set var="area" value="${requestScope.area}"/>
 
 <c:choose>
     <c:when test="${statusCode == 404}">
@@ -17,6 +18,12 @@
         <c:set var="errorTitle" value="${i18n.trans('general.error.500.title')}"/>
         <c:set var="errorSubtitle" value="${i18n.trans('general.error.500.subtitle')}"/>
         <c:set var="errorIcon" value="fi fi-rr-bug"/>
+    </c:when>
+
+    <c:when test="${statusCode == 403}">
+        <c:set var="errorTitle" value="${i18n.trans('general.error.403.title')}"/>
+        <c:set var="errorSubtitle" value="${i18n.trans('general.error.403.subtitle')}"/>
+        <c:set var="errorIcon" value="fi fi-rr-warning"/>
     </c:when>
 
     <c:otherwise>
@@ -47,7 +54,8 @@
             </div>
         </c:if>
 
-        <a href="" class="btn btn-primary px-4">
+        <a href="${area eq 'ADMIN' ? 'admin/dashboard' : 'home'}"
+           class="btn btn-primary px-4">
             ${i18n.trans("general.button.backToHome")}
         </a>
         <a href="javascript:history.back()" class="btn btn-outline-secondary px-4 ms-2">

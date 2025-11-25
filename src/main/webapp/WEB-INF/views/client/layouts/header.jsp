@@ -73,7 +73,7 @@
                                         </li>
                                         <li>
                                             <a class="dropdown-item text-danger"
-                                               href="./auth/logout">
+                                               href="auth/logout">
                                                     ${i18n.trans("general.logout")}
                                             </a>
                                         </li>

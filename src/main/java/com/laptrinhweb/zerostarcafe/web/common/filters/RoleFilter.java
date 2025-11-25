@@ -1,6 +1,7 @@
 package com.laptrinhweb.zerostarcafe.web.common.filters;
 
 import com.laptrinhweb.zerostarcafe.core.security.SecurityKeys;
+import com.laptrinhweb.zerostarcafe.core.utils.Flash;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthUser;
 import com.laptrinhweb.zerostarcafe.domain.user.model.UserRole;
 import jakarta.servlet.*;
@@ -48,28 +49,31 @@ public class RoleFilter implements Filter {
         AuthUser user = (AuthUser) request.getSession(false)
                 .getAttribute(SecurityKeys.SESSION_AUTH_USER);
 
+        Flash flash = new Flash(request);
+
         // User not logged in -> redirect to home
         if (user == null) {
+            flash.error("general.error.userNotLoggedIn").send();
             response.sendRedirect(request.getContextPath() + "/home");
             return;
         }
 
-        String contextPath = request.getContextPath();       // /zero_star_cafe
-        String uri = request.getRequestURI();                // /zero_star_cafe/admin/dashboard
-        String path = uri.substring(contextPath.length());   // /admin/dashboard
+        String ctx = request.getContextPath();       // /zero_star_cafe
+        String uri = request.getRequestURI();        // /zero_star_cafe/admin/dashboard
+        String path = uri.substring(ctx.length());   // /admin/dashboard
 
         // Check individual role requirements
-        if (path.startsWith("/admin") && !user.hasRole(UserRole.SUPER_ADMIN)) {
+        if (path.startsWith("/admin/") && !user.hasRole(UserRole.SUPER_ADMIN)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
-        if (path.startsWith("/manager") && !user.hasRole(UserRole.STORE_MANAGER)) {
+        if (path.startsWith("/manager/") && !user.hasRole(UserRole.STORE_MANAGER)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
-        if (path.startsWith("/staff") && !user.hasRole(UserRole.STAFF)) {
+        if (path.startsWith("/staff/") && !user.hasRole(UserRole.STAFF)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }

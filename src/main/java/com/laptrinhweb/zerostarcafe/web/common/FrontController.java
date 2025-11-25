@@ -83,18 +83,24 @@ public class FrontController extends HttpServlet {
             return;
         }
 
-        // ==== Normalize root path ====
-        if (path.equals("/") || path.isBlank()) {
-            resp.sendRedirect(ctx + "/home");
-            return;
-        }
-
         // ==== Determine which area this request belongs to ====
         Area area = detectArea(path);
         req.setAttribute("area", area.name());
 
         // Extract last part of URL: "/admin/dashboard" -> "dashboard"
         String slug = path.substring(path.lastIndexOf("/") + 1);
+
+        // Default redirect if path is empty
+        if (slug.isEmpty()) {
+            if (area == Area.CLIENT) {
+                resp.sendRedirect(ctx + "/home");
+                return;
+            }
+            if (area == Area.ADMIN) {
+                resp.sendRedirect(ctx + "/admin/dashboard");
+                return;
+            }
+        }
 
         String page;
         String layout;
