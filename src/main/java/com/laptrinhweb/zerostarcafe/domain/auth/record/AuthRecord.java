@@ -1,6 +1,6 @@
-package com.laptrinhweb.zerostarcafe.domain.auth_token;
+package com.laptrinhweb.zerostarcafe.domain.auth.record;
 
-import jakarta.servlet.http.HttpServletRequest;
+import com.laptrinhweb.zerostarcafe.domain.auth.model.TokenStatus;
 
 import java.time.LocalDateTime;
 
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * @lastModified 16/11/2025
  * @since 1.0.0
  */
-public final class AuthToken {
+public final class AuthRecord {
 
     private Long id;
     private Long userId;
@@ -34,28 +34,9 @@ public final class AuthToken {
     private LocalDateTime revokedAt;
     private String revokedReason;
 
-    // ==== Constructors ====
-    public AuthToken() {
+    public AuthRecord() {
     }
 
-    public AuthToken(HttpServletRequest request,
-                     Long userId,
-                     String authHash,
-                     String deviceId,
-                     TokenStatus status,
-                     LocalDateTime expiredAt) {
-        this.userId = userId;
-        this.authHash = authHash;
-        this.deviceId = deviceId;
-        this.status = status;
-        this.createdAt = LocalDateTime.now();
-        this.expiredAt = expiredAt;
-        this.lastRotatedAt = LocalDateTime.now();
-        this.ipLast = request.getRemoteAddr();
-        this.userAgent = request.getHeader("User-Agent");
-    }
-
-    // ==== Getters and Setters ====
     public Long getId() {
         return id;
     }

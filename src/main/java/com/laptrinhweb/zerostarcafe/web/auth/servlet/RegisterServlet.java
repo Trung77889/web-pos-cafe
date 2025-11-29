@@ -1,4 +1,4 @@
-package com.laptrinhweb.zerostarcafe.web.auth;
+package com.laptrinhweb.zerostarcafe.web.auth.servlet;
 
 import com.laptrinhweb.zerostarcafe.core.utils.Flash;
 import com.laptrinhweb.zerostarcafe.core.validation.ValidationResult;
@@ -6,7 +6,6 @@ import com.laptrinhweb.zerostarcafe.domain.auth.dto.RegisterDTO;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthResult;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthStatus;
 import com.laptrinhweb.zerostarcafe.domain.auth.service.AuthService;
-import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -28,13 +27,7 @@ import java.util.Map;
 @WebServlet(name = "RegisterServlet", urlPatterns = "/auth/register")
 public class RegisterServlet extends HttpServlet {
 
-    private AuthService authService;
-
-    @Override
-    public void init(ServletConfig config) throws ServletException {
-        super.init(config);
-        this.authService = new AuthService();
-    }
+    private final AuthService authService = new AuthService();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)

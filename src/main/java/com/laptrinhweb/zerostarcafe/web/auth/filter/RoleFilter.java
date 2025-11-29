@@ -1,4 +1,4 @@
-package com.laptrinhweb.zerostarcafe.web.common.filters;
+package com.laptrinhweb.zerostarcafe.web.auth.filter;
 
 import com.laptrinhweb.zerostarcafe.core.security.SecurityKeys;
 import com.laptrinhweb.zerostarcafe.core.utils.Flash;

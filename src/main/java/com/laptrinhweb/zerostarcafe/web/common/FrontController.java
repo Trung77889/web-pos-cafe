@@ -77,7 +77,7 @@ public class FrontController extends HttpServlet {
         String path = req.getServletPath();
 
         // ==== Ignore static file path ====
-        if (path.startsWith("/assets/")) {
+        if (PathUtil.isStatic(path)) {
             RequestDispatcher rd = getServletContext().getNamedDispatcher("default");
             rd.forward(req, resp);
             return;
