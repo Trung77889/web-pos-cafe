@@ -1,8 +1,7 @@
-package com.laptrinhweb.zerostarcafe.domain.user;
+package com.laptrinhweb.zerostarcafe.domain.user.model;
 
 import com.laptrinhweb.zerostarcafe.domain.auth.dto.RegisterDTO;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthUser;
-import com.laptrinhweb.zerostarcafe.domain.user.model.User;
 import com.laptrinhweb.zerostarcafe.domain.user_role.UserStoreRole;
 
 import java.util.ArrayList;

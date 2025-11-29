@@ -1,4 +1,6 @@
-package com.laptrinhweb.zerostarcafe.domain.auth_token;
+package com.laptrinhweb.zerostarcafe.domain.auth.record;
+
+import com.laptrinhweb.zerostarcafe.domain.auth.model.TokenStatus;
 
 import java.sql.*;
 import java.util.Optional;
@@ -6,19 +8,19 @@ import java.util.Optional;
 /**
  * <h2>Description:</h2>
  * <p>
- * JDBC-based implementation of {@link AuthTokenDAO}.
+ * JDBC-based implementation of {@link AuthRecordDAO}.
  * </p>
  *
  * @author Dang Van Trung
- * @version 1.0.0
- * @lastModified 16/11/2025
+ * @version 1.0.1
+ * @lastModified 22/11/2025
  * @since 1.0.0
  */
-public class AuthTokenDAOImpl implements AuthTokenDAO {
+public class AuthRecordDAOImpl implements AuthRecordDAO {
 
     private final Connection conn;
 
-    public AuthTokenDAOImpl(Connection conn) {
+    public AuthRecordDAOImpl(Connection conn) {
         this.conn = conn;
     }
 
@@ -27,25 +29,49 @@ public class AuthTokenDAOImpl implements AuthTokenDAO {
     // ==========================================================
 
     @Override
-    public void save(AuthToken token) throws SQLException {
-        String sql = """
-                    INSERT INTO auth_tokens (
-                        user_id, auth_hash, device_id, status,
-                        expired_at, last_rotated_at,
-                        ip_last, user_agent
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """;
+    public void save(AuthRecord record) throws SQLException {
+        if (record.getId() == null) {
+            // INSERT branch (new record)
+            String sql = """
+                        INSERT INTO auth_tokens (
+                            user_id, auth_hash, device_id, status,
+                            expired_at, last_rotated_at,
+                            ip_last, user_agent
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """;
 
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setLong(1, token.getUserId());
-            ps.setString(2, token.getAuthHash());
-            ps.setString(3, token.getDeviceId());
-            ps.setString(4, token.getStatus().name());
-            ps.setTimestamp(5, Timestamp.valueOf(token.getExpiredAt()));
-            ps.setTimestamp(6, Timestamp.valueOf(token.getLastRotatedAt()));
-            ps.setString(7, token.getIpLast());
-            ps.setString(8, token.getUserAgent());
-            ps.executeUpdate();
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setLong(1, record.getUserId());
+                ps.setString(2, record.getAuthHash());
+                ps.setString(3, record.getDeviceId());
+                ps.setString(4, record.getStatus().name());
+                ps.setTimestamp(5, Timestamp.valueOf(record.getExpiredAt()));
+                ps.setTimestamp(6, Timestamp.valueOf(record.getLastRotatedAt()));
+                ps.setString(7, record.getIpLast());
+                ps.setString(8, record.getUserAgent());
+                ps.executeUpdate();
+            }
+        } else {
+            // UPDATE branch (existing record)
+            String sql = """
+                        UPDATE auth_tokens
+                        SET auth_hash = ?, device_id = ?, status = ?,
+                            expired_at = ?, last_rotated_at = ?,
+                            ip_last = ?, user_agent = ?
+                        WHERE id = ?
+                    """;
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, record.getAuthHash());
+                ps.setString(2, record.getDeviceId());
+                ps.setString(3, record.getStatus().name());
+                ps.setTimestamp(4, Timestamp.valueOf(record.getExpiredAt()));
+                ps.setTimestamp(5, Timestamp.valueOf(record.getLastRotatedAt()));
+                ps.setString(6, record.getIpLast());
+                ps.setString(7, record.getUserAgent());
+                ps.setLong(8, record.getId());
+                ps.executeUpdate();
+            }
         }
     }
 
@@ -54,7 +80,7 @@ public class AuthTokenDAOImpl implements AuthTokenDAO {
     // ==========================================================
 
     @Override
-    public Optional<AuthToken> findValidByAuthHash(String authHash) throws SQLException {
+    public Optional<AuthRecord> findValidByAuthHash(String authHash) throws SQLException {
         String sql = """
                     SELECT * FROM auth_tokens
                     WHERE auth_hash = ?
@@ -118,8 +144,8 @@ public class AuthTokenDAOImpl implements AuthTokenDAO {
     // ROW MAPPER
     // =======================================================================
 
-    private AuthToken rowMapper(ResultSet rs) throws SQLException {
-        AuthToken t = new AuthToken();
+    private AuthRecord rowMapper(ResultSet rs) throws SQLException {
+        AuthRecord t = new AuthRecord();
 
         t.setId(rs.getLong("id"));
         t.setUserId(rs.getLong("user_id"));

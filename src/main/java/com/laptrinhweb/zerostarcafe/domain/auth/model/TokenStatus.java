@@ -1,10 +1,12 @@
-package com.laptrinhweb.zerostarcafe.domain.auth_token;
+package com.laptrinhweb.zerostarcafe.domain.auth.model;
+
+import com.laptrinhweb.zerostarcafe.domain.auth.record.AuthRecord;
 
 /**
  * <h2>Description:</h2>
  * <p>
  * AuthStatus values for a persistent authentication session or token.
- * Used together with {@link AuthToken}.
+ * Used together with {@link AuthRecord}.
  * </p>
  *
  * @author Dang Van Trung

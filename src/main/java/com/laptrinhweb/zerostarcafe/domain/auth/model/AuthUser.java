@@ -20,23 +20,23 @@ import java.util.List;
  * }</pre>
  *
  * @author Dang Van Trung
- * @version 1.0.0
- * @lastModified 16/11/2025
+ * @version 1.0.1
+ * @lastModified 22/11/2025
  * @since 1.0.0
  */
-public record AuthUser(Long userId, String username, String email, boolean superAdmin,
+public record AuthUser(Long id, String username, String email, boolean isSuperAdmin,
                        List<String> roleCodes) implements Serializable {
 
-    public AuthUser(Long userId,
+    public AuthUser(Long id,
                     String username,
                     String email,
-                    boolean superAdmin,
+                    boolean isSuperAdmin,
                     List<String> roleCodes) {
 
-        this.userId = userId;
+        this.id = id;
         this.username = username;
         this.email = email;
-        this.superAdmin = superAdmin;
+        this.isSuperAdmin = isSuperAdmin;
         this.roleCodes = (roleCodes == null)
                 ? List.of()
                 : List.copyOf(roleCodes);

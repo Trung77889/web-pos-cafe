@@ -4,6 +4,9 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * <h2>Description:</h2>
  * <p>
@@ -22,8 +25,8 @@ import jakarta.servlet.http.HttpServletResponse;
  * </pre>
  *
  * @author Dang Van Trung
- * @version 1.0.0
- * @lastModified 16/11/2025
+ * @version 1.1.0
+ * @lastModified 25/11/2025
  * @since 1.0.0
  */
 public final class CookieUtil {
@@ -72,21 +75,50 @@ public final class CookieUtil {
 
         for (Cookie c : cookies) {
             if (name.equals(c.getName())) {
-                return c.getValue();
+                String value = c.getValue();
+                if (value == null || value.isBlank()) {
+                    return null;
+                }
+                return value;
             }
         }
         return null;
     }
 
     /**
+     * Returns all cookies from the request as an immutable Map.
+     *
+     * @param request the current HttpServletRequest
+     * @return map of cookie name -> cookie value (never null, may be empty)
+     */
+    public static Map<String, String> getAll(HttpServletRequest request) {
+        Map<String, String> map = new HashMap<>();
+
+        if (request == null || request.getCookies() == null) {
+            return map;
+        }
+
+        for (Cookie c : request.getCookies()) {
+            String name = c.getName();
+            String value = c.getValue();
+
+            if (name != null && value != null && !value.isBlank()) {
+                map.put(name, value);
+            }
+        }
+
+        return Map.copyOf(map);
+    }
+
+    /**
      * Clears a cookie by overwriting it with empty value
      * and {@code maxAge = 0} (expires immediately)
      *
-     * @param name the name of the cookie to clear
-     * @param resp the {@link HttpServletResponse} to add the "clearing" cookie to
+     * @param name     the name of the cookie to clear
+     * @param response the {@link HttpServletResponse} to add the "clearing" cookie to
      */
-    public static void clear(String name, HttpServletResponse resp) {
-        if (name == null || resp == null) {
+    public static void clear(String name, HttpServletResponse response) {
+        if (name == null || response == null) {
             return;
         }
 
@@ -96,6 +128,6 @@ public final class CookieUtil {
         cookie.setSecure(true);
         cookie.setMaxAge(0);
 
-        resp.addCookie(cookie);
+        response.addCookie(cookie);
     }
 }
