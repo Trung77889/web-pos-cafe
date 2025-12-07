@@ -1019,4 +1019,12 @@ header h1 {
     cursor: pointer; /* Biến thành con trỏ chuột khi hover */
 }
 
+tr.hidden-row {
+    opacity: 0.5;
+    background-color: #eee !important;
+}
+
+tr.hidden-row td {
+    text-decoration: line-through;
+}
 /*# sourceMappingURL=admin.css.map */

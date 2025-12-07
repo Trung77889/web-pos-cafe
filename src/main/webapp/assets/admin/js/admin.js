@@ -41,15 +41,18 @@ function setupDynamicSearch(inputSelector, tableBodySelector, columnsToSearch) {
 // HÀM 2: LOGIC CHUYỂN TRANG (SIDEBAR)
 function setupPageNavigation() {
     $('.navigation a').on('click', function (event) {
-        event.preventDefault();
-        const $clickedLink = $(this);
-        const targetId = $clickedLink.attr('href').substring(1);
+        const href = $(this).attr('href');
 
-        $('.navigation li.active').removeClass('active');
-        $clickedLink.parent().addClass('active');
+        if (href.startsWith("#")) {
+            event.preventDefault();
+            const targetId = href.substring(1);
 
-        $('.page-content').removeClass('active');
-        $('#' + targetId).addClass('active');
+            $('.navigation li.active').removeClass('active');
+            $(this).parent().addClass('active');
+
+            $('.page-content').removeClass('active');
+            $('#' + targetId).addClass('active');
+        }
     });
 }
 
@@ -218,7 +221,7 @@ function setupModalTrigger(containerSelector, btnSelector) {
 
     $(containerSelector).on('click', btnSelector, function () {
         const $button = $(this);
-        const $row = $button.closest('tr'); // Giả định dữ liệu nằm trên <tr>
+        const $row = $button.closest('tr'); // Dữ liệu nằm trên <tr>
 
         // 1. Lấy ID modal từ 'data-target' của nút
         const modalSelector = $button.data('target');
@@ -303,6 +306,30 @@ function excelExport() {
     })
 }
 
+// HÀM 12: HÀM XỬ LÝ ẨN HIỆN
+function hideItem() {
+    document.querySelectorAll(".btn-hide").forEach(button => {
+        button.addEventListener("click", function () {
+
+            const row = this.closest("tr");
+
+            let isHidden = row.getAttribute("data-hide") === "true";
+
+            isHidden = !isHidden;
+
+            row.setAttribute("data-hide", isHidden);
+
+            if (isHidden) {
+                row.classList.add("hidden-row");
+                this.innerHTML = `<i class="fa-regular fa-eye-slash"></i>`;
+            } else {
+                row.classList.remove("hidden-row");
+                this.innerHTML = `<i class="fa-regular fa-eye"></i>`;
+            }
+        });
+    });
+}
+
 // Plugin jQuery để thiết lập xem trước hình ảnh và nút xóa.
 $.fn.setupImagePreview = function (previewSelector, removeSelector) {
     return this.each(function () {
@@ -384,4 +411,6 @@ $(function () {
     excelExport();
     // Xử lý close button
     closeModal();
+    // Khởi động function hideItem()
+    hideItem()
 });
