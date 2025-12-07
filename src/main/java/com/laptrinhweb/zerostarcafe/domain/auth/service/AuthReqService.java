@@ -1,7 +1,6 @@
 package com.laptrinhweb.zerostarcafe.domain.auth.service;
 
 import com.laptrinhweb.zerostarcafe.core.security.SecurityKeys;
-import com.laptrinhweb.zerostarcafe.core.utils.LoggerUtil;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthContext;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthResult;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthStatus;
@@ -25,8 +24,8 @@ import java.util.Map;
  * </pre>
  *
  * @author Dang Van Trung
- * @version 1.0.0
- * @lastModified 29/11/2025
+ * @version 1.0.1
+ * @lastModified 07/12/2025
  * @since 1.0.0
  */
 public class AuthReqService {
@@ -52,60 +51,50 @@ public class AuthReqService {
             AuthReqInfo reqInfo,
             AuthContext currentContext
     ) {
-        try {
-            if (reqInfo == null)
-                return AuthResult.fail(AuthStatus.SESSION_NOT_FOUND);
+        if (reqInfo == null)
+            return AuthResult.fail(AuthStatus.SESSION_NOT_FOUND);
 
-            Map<String, String> reqTokens =
-                    reqInfo.extractTokensByPrefix(SecurityKeys.AUTH_COOKIE_PREFIX);
+        Map<String, String> reqTokens =
+                reqInfo.extractTokensByPrefix(SecurityKeys.AUTH_COOKIE_PREFIX);
 
-            if (reqTokens == null || reqTokens.isEmpty())
-                return AuthResult.fail(AuthStatus.SESSION_NOT_FOUND);
+        if (reqTokens == null || reqTokens.isEmpty())
+            return AuthResult.fail(AuthStatus.SESSION_NOT_FOUND);
 
-            if (currentContext != null && currentContext.isValid())
-                return reAuthenticateFlow(currentContext, reqInfo, reqTokens);
+        if (currentContext != null && currentContext.isValid())
+            return reAuthenticateFlow(currentContext, reqInfo, reqTokens);
 
-            return restoreFlow(reqInfo, reqTokens);
-        } catch (Exception e) {
-            LoggerUtil.error(AuthReqService.class,
-                    "AUTH REQUEST FLOW ERROR: " + e.getMessage(), e);
-            return AuthResult.fail(AuthStatus.SESSION_INVALID);
-        }
+        return restoreFlow(reqInfo, reqTokens);
     }
 
     /**
      * Process re-authentication using existing session and tokens.
      *
-     * @param currentContext the current authentication context
-     * @param reqInfo        the request information
-     * @param reqTokens      the token map extracted from cookies
+     * @param context   the current authentication context
+     * @param reqInfo   the request information
+     * @param reqTokens the token map extracted from cookies
      * @return auth result containing status and optional updated context
      */
     private AuthResult<AuthStatus, AuthContext> reAuthenticateFlow(
-            AuthContext currentContext,
+            AuthContext context,
             AuthReqInfo reqInfo,
             Map<String, String> reqTokens
     ) {
-        AuthContext newContext = authService.reAuthenticate(currentContext, reqInfo, reqTokens);
-
-        if (newContext == null || !newContext.isValid()) {
-            String oldToken = currentContext.getTokenValue(SecurityKeys.TOKEN_AUTH);
-            authService.clearAuthState(oldToken);
-
+        String authToken = context.getTokenValue(SecurityKeys.TOKEN_AUTH);
+        boolean isValid = authService.reAuthenticate(context, reqInfo, reqTokens);
+        if (!isValid) {
+            authService.clearAuthState(authToken);
             return AuthResult.fail(AuthStatus.SESSION_INVALID);
         }
 
-        String oldToken = currentContext.getTokenValue(SecurityKeys.TOKEN_AUTH);
-        String newToken = newContext.getTokenValue(SecurityKeys.TOKEN_AUTH);
-
-        boolean rotated = oldToken != null
-                && newToken != null
-                && !oldToken.equals(newToken);
+        String reAuthToken = context.getTokenValue(SecurityKeys.TOKEN_AUTH);
+        boolean rotated = authToken != null
+                && reAuthToken != null
+                && !authToken.equals(reAuthToken);
 
         if (rotated)
-            return AuthResult.ok(AuthStatus.SESSION_ROTATED, newContext);
+            return AuthResult.ok(AuthStatus.SESSION_ROTATED, context);
 
-        return AuthResult.ok(AuthStatus.SESSION_REUSED, newContext);
+        return AuthResult.ok(AuthStatus.SESSION_REUSED);
     }
 
     /**

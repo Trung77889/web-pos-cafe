@@ -30,8 +30,8 @@ import java.util.List;
  * </pre>
  *
  * @author Dang Van Trung
- * @version 1.0.0
- * @lastModified 24/11/2025
+ * @version 1.0.1
+ * @lastModified 07/12/2025
  * @since 1.0.0
  */
 public class AuthContextService {
@@ -86,13 +86,10 @@ public class AuthContextService {
 
     /**
      * Refresh an existing authentication context with new tokens.
-     *
-     * @param context the old authentication context
-     * @return the updated authentication context
      */
-    public AuthContext refresh(AuthContext context) {
+    public void refresh(AuthContext context) {
         if (context == null || !context.isValid()) {
-            return null;
+            return;
         }
 
         AuthSession session = context.getSessionInfo();
@@ -103,8 +100,6 @@ public class AuthContextService {
                 TokenUtil.generateToken(),
                 session.getExpiredAt()
         );
-
-        return context;
     }
 
     /**
