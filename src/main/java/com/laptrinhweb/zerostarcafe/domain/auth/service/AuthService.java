@@ -47,8 +47,8 @@ import java.util.Optional;
  * }</pre>
  *
  * @author Dang Van Trung
- * @version 1.2.0
- * @lastModified 29/11/2025
+ * @version 1.2.1
+ * @lastModified 07/12/2025
  * @since 1.0.0
  */
 public final class AuthService {
@@ -86,8 +86,7 @@ public final class AuthService {
             return AuthResult.ok(AuthStatus.REGISTER_SUCCESS);
 
         } catch (Exception e) {
-            LoggerUtil.error(AuthService.class,
-                    "SERVER ERROR: " + e.getMessage(), e);
+            LoggerUtil.error(AuthService.class, e.getMessage(), e);
             return AuthResult.fail(AuthStatus.REGISTER_FAILED);
         }
     }
@@ -124,43 +123,40 @@ public final class AuthService {
      * @param context   current authentication context
      * @param reqInfo   request metadata
      * @param reqTokens tokens extracted from client cookies
-     * @return refreshed context or null if invalid
+     * @return true if the context is still valid after re-validation, false otherwise
      */
-    public AuthContext reAuthenticate(
+    public boolean reAuthenticate(
             AuthContext context,
             AuthReqInfo reqInfo,
             Map<String, String> reqTokens
     ) {
-        try (Connection conn = DBConnection.getConnection()) {
+        if (context == null || !context.isValid())
+            return false;
+
+        AuthSession session = context.getSessionInfo();
+        if (session == null || session.isExpired())
+            return false;
+
+        List<AuthToken> tokens = context.getTokens();
+        if (!isValidTokens(reqTokens, tokens))
+            return false;
+
+        if (session.shouldRotated()) {
+            String oldToken = context.getTokenValue(SecurityKeys.TOKEN_AUTH);
+
             AuthContextService contextService = new AuthContextService();
-            AuthRecordService recordService = new AuthRecordService(conn);
+            contextService.refresh(context);
 
-            if (context == null || !context.isValid())
-                return null;
-
-            AuthSession session = context.getSessionInfo();
-            if (session == null || session.isExpired())
-                return null;
-
-            List<AuthToken> tokens = context.getTokens();
-            if (!isValidTokens(reqTokens, tokens))
-                return null;
-
-            if (session.shouldRotated()) {
-                String oldAuthToken = context.getTokenValue(SecurityKeys.TOKEN_AUTH);
-
-                AuthContext newContext = contextService.refresh(context);
-                recordService.updateByToken(context, reqInfo, oldAuthToken);
-
-                return newContext;
+            try (Connection conn = DBConnection.getConnection()) {
+                AuthRecordService recordService = new AuthRecordService(conn);
+                recordService.updateByToken(context, reqInfo, oldToken);
+            } catch (Exception e) {
+                LoggerUtil.error(AuthService.class, e.getMessage(), e);
+                return false;
             }
-
-            return context;
-
-        } catch (Exception e) {
-            LoggerUtil.error(AuthService.class, e.getMessage(), e);
-            return null;
         }
+
+        return true;
     }
 
     /**
@@ -174,19 +170,19 @@ public final class AuthService {
             AuthReqInfo reqInfo,
             Map<String, String> reqTokens
     ) {
+        if (reqInfo == null || reqTokens == null || reqTokens.isEmpty())
+            return null;
+
+        String authToken = reqTokens.get(SecurityKeys.TOKEN_AUTH);
+        String deviceToken = reqTokens.get(SecurityKeys.TOKEN_DEVICE_ID);
+
+        if (authToken == null || deviceToken == null)
+            return null;
+
         try (Connection conn = DBConnection.getConnection()) {
             AuthContextService contextService = new AuthContextService();
             AuthRecordService recordService = new AuthRecordService(conn);
             UserService userService = new UserService(conn);
-
-            if (reqInfo == null || reqTokens == null || reqTokens.isEmpty())
-                return null;
-
-            String authToken = reqTokens.get(SecurityKeys.TOKEN_AUTH);
-            String deviceToken = reqTokens.get(SecurityKeys.TOKEN_DEVICE_ID);
-
-            if (authToken == null || deviceToken == null)
-                return null;
 
             Optional<AuthRecord> recordOpt = recordService.findValidByRawToken(authToken);
             if (recordOpt.isEmpty())
@@ -250,6 +246,7 @@ public final class AuthService {
     public AuthUser verifyCredential(LoginDTO dto) {
         try (Connection conn = DBConnection.getConnection()) {
             UserService userService = new UserService(conn);
+
             User user = userService.getActiveByUsername(dto.username());
             if (user == null)
                 return null;
@@ -261,7 +258,7 @@ public final class AuthService {
 
             return UserMapper.toAuthenticatedUser(user, roles);
         } catch (Exception e) {
-            throw new AppException("FAILED TO VERIFY CREDENTIAL: " + e.getMessage(), e);
+            throw new AppException("FAIL TO VERIFY CREDENTIAL: " + e.getMessage(), e);
         }
     }
 

@@ -28,8 +28,8 @@ import java.util.Optional;
  * </pre>
  *
  * @author Dang Van Trung
- * @version 1.0.0
- * @lastModified 29/11/2025
+ * @version 1.0.1
+ * @lastModified 07/12/2025
  * @since 1.0.0
  */
 public class AuthRecordService {
@@ -50,31 +50,30 @@ public class AuthRecordService {
             AuthContext ctx,
             AuthReqInfo reqInfo
     ) {
+        AuthRecord record = new AuthRecord();
+
+        Long userId = ctx.getAuthUser().id();
+        record.setUserId(userId);
+
+        record.setAuthHash(TokenUtil.hashToken(ctx.getTokenValue(SecurityKeys.TOKEN_AUTH)));
+        record.setDeviceId(TokenUtil.hashToken(ctx.getTokenValue(SecurityKeys.TOKEN_DEVICE_ID)));
+        record.setStatus(TokenStatus.ACTIVE);
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiredAt = ctx.getSessionInfo().getExpiredAt();
+
+        record.setCreatedAt(now);
+        record.setExpiredAt(expiredAt);
+        record.setLastRotatedAt(now);
+
+        record.setIpLast(reqInfo.getIpAddress());
+        record.setUserAgent(reqInfo.getUserAgent());
+
         try {
-            AuthRecord record = new AuthRecord();
-
-            Long userId = ctx.getAuthUser().id();
-            record.setUserId(userId);
-
-            record.setAuthHash(TokenUtil.hashToken(ctx.getTokenValue(SecurityKeys.TOKEN_AUTH)));
-            record.setDeviceId(TokenUtil.hashToken(ctx.getTokenValue(SecurityKeys.TOKEN_DEVICE_ID)));
-            record.setStatus(TokenStatus.ACTIVE);
-
-            LocalDateTime now = LocalDateTime.now();
-            LocalDateTime expiredAt = ctx.getSessionInfo().getExpiredAt();
-
-            record.setCreatedAt(now);
-            record.setExpiredAt(expiredAt);
-            record.setLastRotatedAt(now);
-
-            record.setIpLast(reqInfo.getIpAddress());
-            record.setUserAgent(reqInfo.getUserAgent());
-
             revokeAllByUserId(userId);
             recordDAO.save(record);
-
         } catch (SQLException e) {
-            throw new AppException("FAIL TO INSERT NEW AUTH RECORD: " + e.getMessage(), e);
+            throw new AppException("FAIL TO INSERT NEW AUTH RECORD", e);
         }
     }
 
@@ -92,10 +91,10 @@ public class AuthRecordService {
         if (ctx == null || !ctx.isValid())
             return;
 
-        try {
-            String authToken = ctx.getTokenValue(SecurityKeys.TOKEN_AUTH);
-            String authHash = TokenUtil.hashToken(authToken);
+        String authToken = ctx.getTokenValue(SecurityKeys.TOKEN_AUTH);
+        String authHash = TokenUtil.hashToken(authToken);
 
+        try {
             Optional<AuthRecord> recordOpt = recordDAO.findValidByAuthHash(authHash);
             if (recordOpt.isEmpty())
                 return;
@@ -110,7 +109,7 @@ public class AuthRecordService {
             recordDAO.save(record);
 
         } catch (SQLException e) {
-            throw new AppException("UPDATE AUTH RECORD FAIL: " + e.getMessage(), e);
+            throw new AppException("FAIL TO UPDATE AUTH RECORD BY CONTEXT", e);
         }
     }
 
@@ -129,8 +128,9 @@ public class AuthRecordService {
         if (ctx == null || !ctx.isValid())
             return;
 
+        String oldHash = TokenUtil.hashToken(oldToken);
+
         try {
-            String oldHash = TokenUtil.hashToken(oldToken);
             Optional<AuthRecord> tokenOpt = recordDAO.findValidByAuthHash(oldHash);
 
             if (tokenOpt.isEmpty())
@@ -149,7 +149,7 @@ public class AuthRecordService {
             recordDAO.save(token);
 
         } catch (SQLException e) {
-            throw new AppException("UPDATE AUTH RECORD FAIL: " + e.getMessage(), e);
+            throw new AppException("FAIL TO UPDATE AUTH RECORD BY TOKEN=" + oldToken, e);
         }
     }
 
@@ -165,7 +165,7 @@ public class AuthRecordService {
         try {
             recordDAO.revokeAllByUserId(userId);
         } catch (SQLException e) {
-            throw new AppException("FAILED TO REVOKE RECORD BY USER_ID=" + userId, e);
+            throw new AppException("FAIL TO REVOKE AUTH RECORD BY USER_ID=" + userId, e);
         }
     }
 
@@ -183,7 +183,7 @@ public class AuthRecordService {
         try {
             recordDAO.revokeByAuthHash(hash);
         } catch (SQLException e) {
-            throw new AppException("FAILED TO FIND VALID AUTH RECORD: " + e.getMessage(), e);
+            throw new AppException("FAIL TO REVOKE AUTH RECORD BY TOKEN=" + rawToken, e);
         }
     }
 
@@ -197,12 +197,12 @@ public class AuthRecordService {
         if (rawToken == null || rawToken.isBlank())
             return Optional.empty();
 
-        try {
-            String hash = TokenUtil.hashToken(rawToken);
-            return recordDAO.findValidByAuthHash(hash);
+        String hash = TokenUtil.hashToken(rawToken);
 
+        try {
+            return recordDAO.findValidByAuthHash(hash);
         } catch (SQLException e) {
-            throw new AppException("FAILED TO FIND VALID AUTH RECORD: " + e.getMessage(), e);
+            throw new AppException("FAIL TO FIND VALID AUTH RECORD BY TOKEN=" + rawToken, e);
         }
     }
 }
