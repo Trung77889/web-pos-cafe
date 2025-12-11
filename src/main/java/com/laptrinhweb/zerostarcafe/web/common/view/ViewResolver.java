@@ -55,7 +55,7 @@ public final class ViewResolver {
 
         // Return default if this view path is blank
         if (viewPath.isBlank())
-            return resolveDefault(area);
+            return ViewMap.getDefaultFor(area);
 
         return new View(
                 area,
@@ -63,19 +63,6 @@ public final class ViewResolver {
                 resolvePagePath(area, viewPath),
                 resolveLayoutPath(area)
         );
-    }
-
-    /**
-     * Returns the default view for the given UI area.
-     *
-     * @param area the UI area to resolve (client/admin)
-     * @return a predefined default {@link View} for that area
-     */
-    public static View resolveDefault(ViewArea area) {
-        return switch (area) {
-            case ADMIN -> ViewMap.Admin.DASHBOARD;
-            default -> ViewMap.Client.HOME;
-        };
     }
 
     /**

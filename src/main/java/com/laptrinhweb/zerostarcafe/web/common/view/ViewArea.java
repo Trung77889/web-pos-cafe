@@ -12,7 +12,7 @@ public enum ViewArea {
     CLIENT, ADMIN, SHARED;
 
     public static ViewArea detectArea(String path) {
-        if (path.startsWith("/admin"))
+        if (path.startsWith("/admin/"))
             return ADMIN;
 
         return CLIENT;

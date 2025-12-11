@@ -31,7 +31,8 @@ public class BaseServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String uri = req.getRequestURI();
-        String path = uri.substring(req.getContextPath().length());
+        String ctx = req.getContextPath();
+        String path = uri.substring(ctx.length());
 
         // ==== Ignore static file path ====
         if (PathUtil.isStatic(path)) {
@@ -43,6 +44,15 @@ public class BaseServlet extends HttpServlet {
         // ==== View resolution and rendering ====
         ViewArea area = ViewArea.detectArea(path);
         View view = ViewResolver.resolve(area, path);
+
+        if (view.isDefault()) {
+            switch (area) {
+                case ADMIN -> resp.sendRedirect(ctx + "/admin/dashboard");
+                default -> resp.sendRedirect(ctx + "/home");
+            }
+            return;
+        }
+
         View.render(view, req, resp);
     }
 }

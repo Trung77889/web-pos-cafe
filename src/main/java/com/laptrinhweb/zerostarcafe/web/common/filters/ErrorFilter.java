@@ -36,7 +36,7 @@ public class ErrorFilter implements Filter {
             }
 
             LoggerUtil.error(getClass(), "Unhandled exception", e);
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 }

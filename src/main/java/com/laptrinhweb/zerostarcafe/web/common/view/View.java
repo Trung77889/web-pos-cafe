@@ -46,6 +46,11 @@ public record View(
         return ViewResolver.resolve(ViewArea.ADMIN, viewPath);
     }
 
+    public boolean isDefault() {
+        View defaultView = ViewMap.getDefaultFor(this.area);
+        return this == defaultView;
+    }
+
     /**
      * Renders the given view by forwarding the request to its layout JSP. </br>
      * Sends a 404 response if the view is {@code null} or the page does not exist.

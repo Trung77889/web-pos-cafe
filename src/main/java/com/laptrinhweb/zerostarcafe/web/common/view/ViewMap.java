@@ -24,14 +24,23 @@ package com.laptrinhweb.zerostarcafe.web.common.view;
  * @lastModified 09/12/2025
  * @since 1.0.0
  */
-public class ViewMap {
+public final class ViewMap {
+
+    private ViewMap() {
+    }
 
     public static class Client {
         public static final View HOME = View.client("/home");
     }
 
     public static class Admin {
-        public static final View DASHBOARD = View.admin("/dashboard");
+        public static final View DASHBOARD = View.admin("/admin/dashboard");
     }
 
+    public static View getDefaultFor(ViewArea area) {
+        return switch (area) {
+            case ADMIN -> Admin.DASHBOARD;
+            default -> Client.HOME;
+        };
+    }
 }
