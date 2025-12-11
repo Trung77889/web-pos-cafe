@@ -15,8 +15,8 @@ package com.laptrinhweb.zerostarcafe.core.utils;
  * </pre>
  *
  * @author Dang Van Trung
- * @version 2.0.0
- * @lastModified 17/11/2025
+ * @version 2.1.0
+ * @lastModified 23/11/2025
  * @since 1.0.0
  */
 public final class PathUtil {
@@ -31,8 +31,8 @@ public final class PathUtil {
         private static final String BASE = "/WEB-INF/views/shared";
         private static final String PAGES = BASE + "/pages";
 
-        public static String page(String slug) {
-            return PAGES + "/" + slug + ".jsp";
+        public static String page(String viewPath) {
+            return PAGES + "/" + viewPath + ".jsp";
         }
     }
 
@@ -44,8 +44,8 @@ public final class PathUtil {
         private static final String PAGES = BASE + "/pages";
         private static final String LAYOUTS = BASE + "/layouts";
 
-        public static String page(String slug) {
-            return PAGES + "/" + slug + ".jsp";
+        public static String page(String viewPath) {
+            return PAGES + "/" + viewPath + ".jsp";
         }
 
         public static String layoutMain() {
@@ -61,12 +61,43 @@ public final class PathUtil {
         private static final String PAGES = BASE + "/pages";
         private static final String LAYOUTS = BASE + "/layouts";
 
-        public static String page(String slug) {
-            return PAGES + "/" + slug + ".jsp";
+        public static String page(String viewPath) {
+            return PAGES + "/" + viewPath + ".jsp";
         }
 
         public static String layoutMain() {
             return LAYOUTS + "/admin-layout.jsp";
         }
+    }
+
+    // ============================
+    // Static Path Detection
+    // ============================
+    private static final String[] STATIC_PREFIXES = {
+            "/assets/"
+    };
+
+    private static final String[] STATIC_EXTENSIONS = {
+            ".css", ".js", ".map",
+            ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp",
+            ".ico",
+            ".ttf", ".woff", ".woff2",
+            ".mp4", ".mp3"
+    };
+
+    public static boolean isStatic(String path) {
+        if (path == null) return false;
+
+        path = path.toLowerCase();
+
+        for (String pre : STATIC_PREFIXES) {
+            if (path.startsWith(pre)) return true;
+        }
+
+        for (String ext : STATIC_EXTENSIONS) {
+            if (path.endsWith(ext)) return true;
+        }
+
+        return false;
     }
 }
