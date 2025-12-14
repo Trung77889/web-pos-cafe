@@ -1,6 +1,8 @@
-package com.laptrinhweb.zerostarcafe.web.common;
+package com.laptrinhweb.zerostarcafe.web.common.servlet;
 
-import com.laptrinhweb.zerostarcafe.core.utils.PathUtil;
+import com.laptrinhweb.zerostarcafe.web.common.view.View;
+import com.laptrinhweb.zerostarcafe.web.common.view.ViewArea;
+import com.laptrinhweb.zerostarcafe.web.common.view.ViewResolver;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,8 +15,8 @@ import java.io.IOException;
  * Renders the generic error page for any container-dispatched error.
  *
  * @author Dang Van Trung
- * @version 1.0.1
- * @lastModified 17/11/2025
+ * @version 1.0.2
+ * @lastModified 12/11/2025
  * @since 1.0.0
  */
 @WebServlet(name = "ErrorServlet", urlPatterns = "/error")
@@ -24,14 +26,11 @@ public class ErrorServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        req.setAttribute("pageTitle", "general.page.error");
-        req.setAttribute("pageContent", PathUtil.Shared.page("error"));
+        ViewArea area = (ViewArea) req.getAttribute(View.AREA_KEY);
+        View view = ViewResolver.resolveError(
+                area != null ? area : ViewArea.CLIENT
+        );
 
-        String area = (String) req.getAttribute("area");
-        String layout = "ADMIN".equals(area)
-                ? PathUtil.Admin.layoutMain()
-                : PathUtil.Client.layoutMain();
-
-        req.getRequestDispatcher(layout).forward(req, resp);
+        View.render(view, req, resp);
     }
 }
