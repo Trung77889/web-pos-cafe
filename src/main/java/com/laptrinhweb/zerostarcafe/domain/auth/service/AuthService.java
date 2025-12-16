@@ -4,20 +4,26 @@ import com.laptrinhweb.zerostarcafe.core.database.DBConnection;
 import com.laptrinhweb.zerostarcafe.core.exception.AppException;
 import com.laptrinhweb.zerostarcafe.core.security.PasswordUtil;
 import com.laptrinhweb.zerostarcafe.core.security.SecurityKeys;
+import com.laptrinhweb.zerostarcafe.core.security.TokenUtil;
 import com.laptrinhweb.zerostarcafe.core.utils.LoggerUtil;
 import com.laptrinhweb.zerostarcafe.domain.auth.dto.LoginDTO;
 import com.laptrinhweb.zerostarcafe.domain.auth.dto.RegisterDTO;
+import com.laptrinhweb.zerostarcafe.domain.auth.dto.RequestInfoDTO;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.*;
 import com.laptrinhweb.zerostarcafe.domain.auth.record.AuthRecord;
 import com.laptrinhweb.zerostarcafe.domain.auth.record.AuthRecordService;
-import com.laptrinhweb.zerostarcafe.domain.auth.request.AuthReqInfo;
 import com.laptrinhweb.zerostarcafe.domain.user.model.User;
 import com.laptrinhweb.zerostarcafe.domain.user.model.UserMapper;
+import com.laptrinhweb.zerostarcafe.domain.user.model.UserRole;
 import com.laptrinhweb.zerostarcafe.domain.user.service.UserService;
 import com.laptrinhweb.zerostarcafe.domain.user_role.UserStoreRole;
+import lombok.NonNull;
 
 import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -47,8 +53,8 @@ import java.util.Optional;
  * }</pre>
  *
  * @author Dang Van Trung
- * @version 1.2.1
- * @lastModified 07/12/2025
+ * @version 1.2.2
+ * @lastModified 14/12/2025
  * @since 1.0.0
  */
 public final class AuthService {
@@ -56,36 +62,40 @@ public final class AuthService {
     /**
      * Registers a new user.
      *
-     * @param form registration input
+     * @param dto registration input
      * @return AuthResult indicating success or failure
      */
-    public AuthResult<AuthStatus, Void> register(RegisterDTO form) {
+    public AuthResult<AuthStatus, Void> register(@NonNull RegisterDTO dto) {
         try (Connection conn = DBConnection.getConnection()) {
             UserService userService = new UserService(conn);
 
+            String email = normalize(dto.getEmail());
+            String username = normalize(dto.getUsername());
+
             // Check duplicate
-            if (userService.existsByEmail(form.email()))
+            if (userService.existsByEmail(email))
                 return AuthResult.fail(AuthStatus.EMAIL_EXISTS);
 
-            if (userService.existsByUsername(form.username()))
+            if (userService.existsByUsername(username))
                 return AuthResult.fail(AuthStatus.USERNAME_EXISTS);
 
-            // Hash password securely (Argon2)
-            String hashedPassword = PasswordUtil.hash(form.password());
+            // Create a new user
+            User newUser = new User();
+            newUser.setEmail(email);
+            newUser.setUsername(username);
 
-            // Create and persist new user
-            User newUser = UserMapper.fromRegister(form);
+            // Hash password securely (Argon2)
+            String hashedPassword = PasswordUtil.hash(dto.getPassword());
             newUser.setPasswordHash(hashedPassword);
 
-            boolean created = userService.save(newUser);
-            if (!created)
-                return AuthResult.fail(AuthStatus.REGISTER_FAILED);
+            // Persist user to the database
+            userService.save(newUser);
 
             LoggerUtil.info(AuthService.class,
-                    "NEW USER REGISTERED: " + newUser.getUsername());
+                    "New User Registered: " + newUser.getUsername());
             return AuthResult.ok(AuthStatus.REGISTER_SUCCESS);
 
-        } catch (Exception e) {
+        } catch (AppException | SQLException e) {
             LoggerUtil.error(AuthService.class, e.getMessage(), e);
             return AuthResult.fail(AuthStatus.REGISTER_FAILED);
         }
@@ -98,20 +108,65 @@ public final class AuthService {
      * @param reqInfo request metadata (ip, agent, device-id)
      * @return AuthResult with AuthContext or failure status
      */
-    public AuthResult<AuthStatus, AuthContext> authenticate(LoginDTO form, AuthReqInfo reqInfo) {
+    public AuthResult<AuthStatus, AuthContext> authenticate(
+            @NonNull LoginDTO form,
+            @NonNull RequestInfoDTO reqInfo
+    ) {
         try (Connection conn = DBConnection.getConnection()) {
-            AuthContextService contextService = new AuthContextService();
             AuthRecordService recordService = new AuthRecordService(conn);
 
-            AuthUser authUser = verifyCredential(form);
+            // Verify credential (username and password)
+            AuthUser authUser = verifyCredential(conn, form);
             if (authUser == null)
                 return AuthResult.fail(AuthStatus.INVALID_CREDENTIALS);
 
-            AuthContext context = contextService.create(authUser, reqInfo);
-            recordService.create(context, reqInfo);
+            // Create auth session info
+            LocalDateTime expiredAt = resolveExpiredAt(authUser);
+            AuthSession sessionInfo = new AuthSession(expiredAt);
 
+            // Create auth tokens (auth token + device id)
+            List<AuthToken> tokens = new ArrayList<>();
+
+            AuthToken authToken = new AuthToken(
+                    SecurityKeys.TOKEN_AUTH,
+                    TokenUtil.generateToken(),
+                    sessionInfo.getExpiredAt()
+            );
+            tokens.add(authToken);
+
+            String deviceId = reqInfo.getCookieValue(SecurityKeys.TOKEN_DEVICE_ID);
+            AuthToken deviceToken = new AuthToken(
+                    SecurityKeys.TOKEN_DEVICE_ID,
+                    deviceId != null ? deviceId : TokenUtil.generateToken(),
+                    sessionInfo.getExpiredAt()
+            );
+            tokens.add(deviceToken);
+
+            // Create auth context
+            AuthContext context = new AuthContext(authUser, sessionInfo, tokens);
+
+            // Save new auth record
+            String authHash = TokenUtil.hashToken(authToken.getValue());
+            String deviceIdHash = TokenUtil.hashToken(deviceToken.getValue());
+
+            AuthRecord record = new AuthRecord();
+            record.setUserId(authUser.getId());
+            record.setAuthHash(authHash);
+            record.setDeviceId(deviceIdHash);
+            record.setStatus(TokenStatus.ACTIVE);
+            record.setCreatedAt(LocalDateTime.now());
+            record.setExpiredAt(expiredAt);
+            record.setLastRotatedAt(LocalDateTime.now());
+            record.setIpLast(reqInfo.getIpAddress());
+            record.setUserAgent(reqInfo.getUserAgent());
+
+            record = recordService.save(authUser.getId(), record);
+
+            LoggerUtil.info(AuthService.class,
+                    "New Login Record: \n" + record.toString());
             return AuthResult.ok(AuthStatus.LOGIN_SUCCESS, context);
-        } catch (Exception e) {
+
+        } catch (AppException | SQLException e) {
             LoggerUtil.error(AuthService.class, e.getMessage(), e);
             return AuthResult.fail(AuthStatus.LOGIN_FAILED);
         }
@@ -126,37 +181,44 @@ public final class AuthService {
      * @return true if the context is still valid after re-validation, false otherwise
      */
     public boolean reAuthenticate(
-            AuthContext context,
-            AuthReqInfo reqInfo,
-            Map<String, String> reqTokens
+            @NonNull AuthContext context,
+            @NonNull RequestInfoDTO reqInfo,
+            @NonNull Map<String, String> reqTokens
     ) {
-        if (context == null || !context.isValid())
-            return false;
-
-        AuthSession session = context.getSessionInfo();
-        if (session == null || session.isExpired())
-            return false;
-
         List<AuthToken> tokens = context.getTokens();
+
+        // Validate tokens against server tokens
         if (!isValidTokens(reqTokens, tokens))
             return false;
 
-        if (session.shouldRotated()) {
-            String oldToken = context.getTokenValue(SecurityKeys.TOKEN_AUTH);
+        // Check session rotation
+        AuthSession session = context.getSessionInfo();
+        if (!session.shouldRotate())
+            return true;
 
-            AuthContextService contextService = new AuthContextService();
-            contextService.refresh(context);
+        // Rotation if needed
+        String oldToken = context.getTokenValue(SecurityKeys.TOKEN_AUTH);
+        if (oldToken == null || oldToken.isBlank())
+            return false;
 
-            try (Connection conn = DBConnection.getConnection()) {
-                AuthRecordService recordService = new AuthRecordService(conn);
-                recordService.updateByToken(context, reqInfo, oldToken);
-            } catch (Exception e) {
-                LoggerUtil.error(AuthService.class, e.getMessage(), e);
-                return false;
-            }
+        // Generate new token
+        String newToken = TokenUtil.generateToken();
+        AuthToken newAuthToken = new AuthToken(
+                SecurityKeys.TOKEN_AUTH, newToken, session.getExpiredAt());
+
+        // Update auth context
+        session.updateLastRotatedTime();
+        context.updateToken(newAuthToken);
+
+        // Update auth record
+        try (Connection conn = DBConnection.getConnection()) {
+            AuthRecordService recordService = new AuthRecordService(conn);
+            recordService.updateByToken(reqInfo, newToken, oldToken);
+            return true;
+        } catch (Exception e) {
+            LoggerUtil.error(AuthService.class, e.getMessage(), e);
+            return false;
         }
-
-        return true;
     }
 
     /**
@@ -167,52 +229,75 @@ public final class AuthService {
      * @return restored AuthContext or null if not restorable
      */
     public AuthContext restore(
-            AuthReqInfo reqInfo,
-            Map<String, String> reqTokens
+            @NonNull RequestInfoDTO reqInfo,
+            @NonNull Map<String, String> reqTokens
     ) {
-        if (reqInfo == null || reqTokens == null || reqTokens.isEmpty())
-            return null;
+        String rawAuthToken = reqTokens.get(SecurityKeys.TOKEN_AUTH);
+        String rawDeviceId = reqTokens.get(SecurityKeys.TOKEN_DEVICE_ID);
 
-        String authToken = reqTokens.get(SecurityKeys.TOKEN_AUTH);
-        String deviceToken = reqTokens.get(SecurityKeys.TOKEN_DEVICE_ID);
-
-        if (authToken == null || deviceToken == null)
+        if (rawAuthToken == null || rawDeviceId == null)
             return null;
 
         try (Connection conn = DBConnection.getConnection()) {
-            AuthContextService contextService = new AuthContextService();
             AuthRecordService recordService = new AuthRecordService(conn);
             UserService userService = new UserService(conn);
 
-            Optional<AuthRecord> recordOpt = recordService.findValidByRawToken(authToken);
+            // Get the current auth record by token
+            Optional<AuthRecord> recordOpt = recordService.findValidByRawToken(rawAuthToken);
             if (recordOpt.isEmpty())
                 return null;
 
             AuthRecord record = recordOpt.get();
 
-            if (LocalDateTime.now().isAfter(record.getExpiredAt()))
+            // Check if the auth session is expired
+            LocalDateTime expiredAt = record.getExpiredAt();
+            if (expiredAt == null || LocalDateTime.now().isAfter(expiredAt))
                 return null;
 
-            if (!deviceToken.equals(record.getDeviceId()))
+            // Check device ID match
+            String deviceIdHash = TokenUtil.hashToken(rawDeviceId);
+            if (!deviceIdHash.equals(record.getDeviceId()))
                 return null;
 
+            // Build auth context from record
             Long userId = record.getUserId();
-
             User user = userService.getActiveById(userId);
             if (user == null)
                 return null;
 
             List<UserStoreRole> roles = userService.getRolesOf(user);
-            AuthUser authUser = UserMapper.toAuthenticatedUser(user, roles);
+            AuthUser authUser = UserMapper.toAuthUser(user, roles);
 
-            AuthContext newContext = contextService.create(authUser, reqInfo);
+            // Create auth session info
+            AuthSession sessionInfo = new AuthSession(expiredAt);
 
-            AuthSession session = newContext.getSessionInfo();
-            session.setExpiredAt(record.getExpiredAt());
+            // Create auth tokens (auth token + device id)
+            List<AuthToken> tokens = new ArrayList<>();
 
-            recordService.updateByContext(newContext, reqInfo);
-            return newContext;
+            AuthToken authToken = new AuthToken(
+                    SecurityKeys.TOKEN_AUTH,
+                    rawAuthToken,
+                    expiredAt
+            );
+            tokens.add(authToken);
 
+            AuthToken deviceToken = new AuthToken(
+                    SecurityKeys.TOKEN_DEVICE_ID,
+                    rawDeviceId,
+                    expiredAt
+            );
+            tokens.add(deviceToken);
+
+            // Create auth context
+            AuthContext context = new AuthContext(authUser, sessionInfo, tokens);
+
+            // Update record with new metadata and last rotated time
+            record.setIpLast(reqInfo.getIpAddress());
+            record.setUserAgent(reqInfo.getUserAgent());
+            record.setLastRotatedAt(LocalDateTime.now());
+            recordService.save(userId, record);
+
+            return context;
         } catch (Exception e) {
             LoggerUtil.error(AuthService.class, e.getMessage(), e);
             return null;
@@ -243,23 +328,19 @@ public final class AuthService {
      * @param dto login input
      * @return authenticated AuthUser or null if invalid
      */
-    public AuthUser verifyCredential(LoginDTO dto) {
-        try (Connection conn = DBConnection.getConnection()) {
-            UserService userService = new UserService(conn);
+    public AuthUser verifyCredential(Connection conn, LoginDTO dto) {
+        UserService userService = new UserService(conn);
 
-            User user = userService.getActiveByUsername(dto.username());
-            if (user == null)
-                return null;
+        String username = normalize(dto.getUsername());
+        User user = userService.getActiveByUsername(username);
+        if (user == null)
+            return null;
 
-            if (!PasswordUtil.verify(dto.password(), user.getPasswordHash()))
-                return null;
+        if (!PasswordUtil.verify(dto.getPassword(), user.getPasswordHash()))
+            return null;
 
-            List<UserStoreRole> roles = userService.getRolesOf(user);
-
-            return UserMapper.toAuthenticatedUser(user, roles);
-        } catch (Exception e) {
-            throw new AppException("FAIL TO VERIFY CREDENTIAL: " + e.getMessage(), e);
-        }
+        List<UserStoreRole> roles = userService.getRolesOf(user);
+        return UserMapper.toAuthUser(user, roles);
     }
 
     /**
@@ -273,12 +354,6 @@ public final class AuthService {
             Map<String, String> reqTokens,
             List<AuthToken> authTokens
     ) {
-        if (reqTokens == null || reqTokens.isEmpty())
-            return false;
-
-        if (authTokens == null || authTokens.isEmpty())
-            return false;
-
         for (AuthToken serverToken : authTokens) {
             String name = serverToken.getName();
             String value = reqTokens.get(name);
@@ -294,5 +369,33 @@ public final class AuthService {
         }
 
         return true;
+    }
+
+    /**
+     * Resolve the expiry time for the given user based on user role.
+     *
+     * @param user the authenticated user
+     * @return the calculated expiry time
+     */
+    public LocalDateTime resolveExpiredAt(AuthUser user) {
+        LocalDateTime now = LocalDateTime.now();
+
+        if (user == null)
+            return now.plusMinutes(SecurityKeys.DEFAULT_SESSION_TTL);
+
+        if (user.hasRole(UserRole.SUPER_ADMIN))
+            return now.plusMinutes(SecurityKeys.SUPER_ADMIN_SESSION_TTL);
+
+        if (user.hasRole(UserRole.STORE_MANAGER))
+            return now.plusMinutes(SecurityKeys.MANAGER_SESSION_TTL);
+
+        if (user.hasRole(UserRole.STAFF))
+            return LocalDate.now().atTime(23, 59);
+
+        return now.plusMinutes(SecurityKeys.DEFAULT_SESSION_TTL);
+    }
+
+    private static String normalize(String s) {
+        return s == null ? null : s.trim().toLowerCase();
     }
 }

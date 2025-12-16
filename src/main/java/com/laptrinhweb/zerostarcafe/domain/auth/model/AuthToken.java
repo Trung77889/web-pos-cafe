@@ -1,5 +1,10 @@
 package com.laptrinhweb.zerostarcafe.domain.auth.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -10,23 +15,21 @@ import java.time.LocalDateTime;
  * </p>
  *
  * @author Dang Van Trung
- * @version 1.0.0
- * @lastModified 23/11/2025
+ * @version 1.0.1
+ * @lastModified 14/12/2025
  * @since 1.0.0
  */
-public final class AuthToken {
-    private String name;
-    private String value;
-    private LocalDateTime expiredAt;
 
-    public AuthToken() {
-    }
+@AllArgsConstructor
+@Getter
+public final class AuthToken implements Serializable {
 
-    public AuthToken(String name, String value, LocalDateTime expiredAt) {
-        this.name = name;
-        this.value = value;
-        this.expiredAt = expiredAt;
-    }
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    private final String name;
+    private final String value;
+    private final LocalDateTime expiredAt;
 
     /**
      * Checks if this token is expired.
@@ -37,27 +40,4 @@ public final class AuthToken {
         return expiredAt != null && LocalDateTime.now().isAfter(expiredAt);
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
-    }
-
-    public LocalDateTime getExpiredAt() {
-        return expiredAt;
-    }
-
-    public void setExpiredAt(LocalDateTime expiredAt) {
-        this.expiredAt = expiredAt;
-    }
 }

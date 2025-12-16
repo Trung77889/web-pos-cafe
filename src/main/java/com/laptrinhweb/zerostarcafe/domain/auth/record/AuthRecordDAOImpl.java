@@ -3,6 +3,7 @@ package com.laptrinhweb.zerostarcafe.domain.auth.record;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.TokenStatus;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -12,8 +13,8 @@ import java.util.Optional;
  * </p>
  *
  * @author Dang Van Trung
- * @version 1.0.1
- * @lastModified 22/11/2025
+ * @version 1.0.2
+ * @lastModified 14/12/2025
  * @since 1.0.0
  */
 public class AuthRecordDAOImpl implements AuthRecordDAO {
@@ -29,7 +30,7 @@ public class AuthRecordDAOImpl implements AuthRecordDAO {
     // ==========================================================
 
     @Override
-    public void save(AuthRecord record) throws SQLException {
+    public AuthRecord save(AuthRecord record) throws SQLException {
         if (record.getId() == null) {
             // INSERT branch (new record)
             String sql = """
@@ -40,7 +41,7 @@ public class AuthRecordDAOImpl implements AuthRecordDAO {
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """;
 
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            try (PreparedStatement ps = conn.prepareStatement(sql, new String[]{"id"})) {
                 ps.setLong(1, record.getUserId());
                 ps.setString(2, record.getAuthHash());
                 ps.setString(3, record.getDeviceId());
@@ -49,7 +50,24 @@ public class AuthRecordDAOImpl implements AuthRecordDAO {
                 ps.setTimestamp(6, Timestamp.valueOf(record.getLastRotatedAt()));
                 ps.setString(7, record.getIpLast());
                 ps.setString(8, record.getUserAgent());
-                ps.executeUpdate();
+
+                int affected = ps.executeUpdate();
+                if (affected != 1)
+                    throw new SQLException(
+                            "Inserting auth record failed, rows affected=" + affected);
+
+                // Retrieve generated ID
+                Long generatedId = null;
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next())
+                        generatedId = rs.getLong(1);
+                }
+
+                if (generatedId != null && generatedId > 0) {
+                    record.setId(generatedId);
+                    return record;
+                } else
+                    throw new SQLException("Failed to retrieve generated ID");
             }
         } else {
             // UPDATE branch (existing record)
@@ -70,8 +88,15 @@ public class AuthRecordDAOImpl implements AuthRecordDAO {
                 ps.setString(6, record.getIpLast());
                 ps.setString(7, record.getUserAgent());
                 ps.setLong(8, record.getId());
-                ps.executeUpdate();
+
+                int affected = ps.executeUpdate();
+                if (affected != 1)
+                    throw new SQLException(
+                            "Update auth record failed, rows affected=" + affected
+                    );
             }
+
+            return record;
         }
     }
 
@@ -85,12 +110,13 @@ public class AuthRecordDAOImpl implements AuthRecordDAO {
                     SELECT * FROM auth_tokens
                     WHERE auth_hash = ?
                       AND status = 'ACTIVE'
-                      AND expired_at > NOW()
+                      AND expired_at > ?
                     LIMIT 1
                 """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, authHash);
+            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) return Optional.empty();
                 return Optional.of(rowMapper(rs));
@@ -107,14 +133,15 @@ public class AuthRecordDAOImpl implements AuthRecordDAO {
         String sql = """
                     UPDATE auth_tokens
                     SET status = 'REVOKED',
-                        revoked_at = NOW(),
+                        revoked_at = ?,
                         revoked_reason = 'revoked_by_system'
                     WHERE user_id = ?
                       AND status = 'ACTIVE'
                 """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setLong(1, userId);
+            ps.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setLong(2, userId);
             ps.executeUpdate();
         }
     }
@@ -128,14 +155,15 @@ public class AuthRecordDAOImpl implements AuthRecordDAO {
         String sql = """
                     UPDATE auth_tokens
                     SET status = 'REVOKED',
-                        revoked_at = NOW(),
+                        revoked_at = ?,
                         revoked_reason = 'revoked_single'
                     WHERE auth_hash = ?
                       AND status = 'ACTIVE'
                 """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, authHash);
+            ps.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setString(2, authHash);
             ps.executeUpdate();
         }
     }

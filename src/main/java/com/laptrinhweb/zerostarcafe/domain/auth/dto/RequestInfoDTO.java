@@ -1,4 +1,7 @@
-package com.laptrinhweb.zerostarcafe.domain.auth.request;
+package com.laptrinhweb.zerostarcafe.domain.auth.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,27 +14,17 @@ import java.util.Map;
  * </p>
  *
  * @author Dang Van Trung
- * @version 1.0.0
- * @lastModified 24/11/2025
+ * @version 1.0.1
+ * @lastModified 14/12/2025
  * @since 1.0.0
  */
-public class AuthReqInfo {
-    private String ipAddress;
-    private String userAgent;
-    private Map<String, String> cookies;
 
-    public AuthReqInfo() {
-    }
-
-    public AuthReqInfo(
-            String ipAddress,
-            String userAgent,
-            Map<String, String> cookies
-    ) {
-        this.ipAddress = ipAddress;
-        this.userAgent = userAgent;
-        this.cookies = cookies;
-    }
+@AllArgsConstructor
+@Getter
+public final class RequestInfoDTO {
+    private final String ipAddress;
+    private final String userAgent;
+    private final Map<String, String> cookies;
 
     /**
      * Extracts cookies by exact names.
@@ -86,27 +79,4 @@ public class AuthReqInfo {
         return null;
     }
 
-    public String getIpAddress() {
-        return ipAddress;
-    }
-
-    public void setIpAddress(String ipAddress) {
-        this.ipAddress = ipAddress;
-    }
-
-    public String getUserAgent() {
-        return userAgent;
-    }
-
-    public void setUserAgent(String userAgent) {
-        this.userAgent = userAgent;
-    }
-
-    public Map<String, String> getCookies() {
-        return cookies;
-    }
-
-    public void setCookies(Map<String, String> cookies) {
-        this.cookies = cookies;
-    }
 }

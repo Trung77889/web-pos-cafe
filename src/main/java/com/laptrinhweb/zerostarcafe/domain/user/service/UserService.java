@@ -49,14 +49,14 @@ public class UserService {
      * Saves a user to the database.
      *
      * @param user the user to save
-     * @return true if the user was saved successfully
+     * @return the saved user with ID
      * @throws AppException if a SQL error occurs
      */
-    public boolean save(User user) {
+    public User save(User user) {
         try {
             return userDAO.save(user);
         } catch (SQLException e) {
-            throw new AppException("SQL ERROR: " + e.getMessage(), e);
+            throw new AppException("Fail to insert user=" + user.getUsername(), e);
         }
     }
 
@@ -71,7 +71,7 @@ public class UserService {
         try {
             return userDAO.existsByEmail(email);
         } catch (SQLException e) {
-            throw new AppException("SQL ERROR: " + e.getMessage(), e);
+            throw new AppException("Fail to check user exists by email=" + email, e);
         }
     }
 
@@ -86,7 +86,7 @@ public class UserService {
         try {
             return userDAO.existsByUsername(username);
         } catch (SQLException e) {
-            throw new AppException("SQL ERROR: " + e.getMessage(), e);
+            throw new AppException("Fail to check user exists by username=" + username, e);
         }
     }
 
@@ -111,7 +111,7 @@ public class UserService {
 
             return user;
         } catch (SQLException e) {
-            throw new AppException("SQL ERROR: " + e.getMessage(), e);
+            throw new AppException("Fail to get active user by username=" + username, e);
         }
     }
 
@@ -136,7 +136,7 @@ public class UserService {
 
             return user;
         } catch (SQLException e) {
-            throw new AppException("SQL ERROR: " + e.getMessage(), e);
+            throw new AppException("Fail to get active user with id=" + id, e);
         }
     }
 
@@ -156,7 +156,7 @@ public class UserService {
         try {
             return roleDAO.findByUserId(user.getId());
         } catch (SQLException e) {
-            throw new AppException("SQL ERROR: " + e.getMessage(), e);
+            throw new AppException("Fail to get list roles of user=" + user.getUsername(), e);
         }
     }
 }

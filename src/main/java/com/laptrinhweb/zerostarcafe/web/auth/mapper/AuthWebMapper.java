@@ -1,10 +1,13 @@
 package com.laptrinhweb.zerostarcafe.web.auth.mapper;
 
+import com.laptrinhweb.zerostarcafe.core.security.CookieUtil;
 import com.laptrinhweb.zerostarcafe.core.security.SecurityKeys;
+import com.laptrinhweb.zerostarcafe.domain.auth.dto.RequestInfoDTO;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthContext;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthSession;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthToken;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthUser;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 import java.util.ArrayList;
@@ -13,21 +16,35 @@ import java.util.List;
 /**
  * <h2>Description:</h2>
  * <p>
- * Maps data stored in {@link HttpSession} and the current request
- * into a domain {@link AuthContext}.
+ *
  * </p>
+ *
+ * <h2>Example Usage:</h2>
+ * <pre>
+ * {@code
+ * ... code here
+ * }
+ * </pre>
  *
  * @author Dang Van Trung
  * @version 1.0.0
- * @lastModified 22/11/2025
+ * @lastModified 15/12/2025
  * @since 1.0.0
  */
-public final class AuthContextMapper {
+public final class AuthWebMapper {
 
-    private AuthContextMapper() {
+    public static RequestInfoDTO toReqInfoDTO(HttpServletRequest request) {
+        if (request == null)
+            return null;
+
+        return new RequestInfoDTO(
+                request.getRemoteAddr(),
+                request.getHeader("User-Agent"),
+                CookieUtil.getAll(request)
+        );
     }
 
-    public static AuthContext from(HttpSession session) {
+    public static AuthContext toAuthContext(HttpSession session) {
         if (session == null)
             return null;
 
@@ -44,11 +61,6 @@ public final class AuthContextMapper {
             tokens = new ArrayList<>();
         }
 
-        AuthContext ctx = new AuthContext();
-        ctx.setAuthUser(authUser);
-        ctx.setSessionInfo(sessionInfo);
-        ctx.setTokens(tokens);
-
-        return ctx;
+        return new AuthContext(authUser, sessionInfo, tokens);
     }
 }

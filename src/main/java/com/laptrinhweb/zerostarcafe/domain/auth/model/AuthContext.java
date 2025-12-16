@@ -1,6 +1,8 @@
 package com.laptrinhweb.zerostarcafe.domain.auth.model;
 
-import java.time.LocalDateTime;
+import lombok.Getter;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,16 +13,25 @@ import java.util.List;
  * </p>
  *
  * @author Dang Van Trung
- * @version 1.0.0
- * @lastModified 22/11/2025
+ * @version 1.0.1
+ * @lastModified 14/12/2025
  * @since 1.0.0
  */
+
+@Getter
 public class AuthContext {
-    private AuthUser authUser;
-    private AuthSession sessionInfo;
+    private final AuthUser authUser;
+    private final AuthSession sessionInfo;
     private List<AuthToken> tokens;
 
-    public AuthContext() {
+    public AuthContext(
+            AuthUser authUser,
+            AuthSession sessionInfo,
+            List<AuthToken> tokens
+    ) {
+        this.authUser = authUser;
+        this.sessionInfo = sessionInfo;
+        this.tokens = List.copyOf(tokens);
     }
 
     /**
@@ -56,46 +67,22 @@ public class AuthContext {
     }
 
     /**
-     * Updates a token with a new value and expiry time.
+     * Creates a new context with an updated token.
      *
-     * @param name         the token name
-     * @param newValue     the new token value
-     * @param newExpiredAt the new expiry time
+     * @param newToken the new token to update
      */
-    public void updateToken(String name, String newValue, LocalDateTime newExpiredAt) {
-        if (tokens == null || tokens.isEmpty() || name == null)
+    public void updateToken(AuthToken newToken) {
+        if (tokens == null || newToken == null)
             return;
 
+        List<AuthToken> newTokens = new ArrayList<>();
         for (AuthToken t : tokens) {
-            if (t.getName().equals(name)) {
-                t.setValue(newValue);
-                t.setExpiredAt(newExpiredAt);
-                return;
+            if (!t.getName().equals(newToken.getName())) {
+                newTokens.add(t);
             }
         }
-    }
 
-    public AuthUser getAuthUser() {
-        return authUser;
-    }
-
-    public void setAuthUser(AuthUser authUser) {
-        this.authUser = authUser;
-    }
-
-    public AuthSession getSessionInfo() {
-        return sessionInfo;
-    }
-
-    public void setSessionInfo(AuthSession sessionInfo) {
-        this.sessionInfo = sessionInfo;
-    }
-
-    public List<AuthToken> getTokens() {
-        return tokens;
-    }
-
-    public void setTokens(List<AuthToken> tokens) {
-        this.tokens = tokens;
+        newTokens.add(newToken);
+        this.tokens = List.copyOf(newTokens);
     }
 }

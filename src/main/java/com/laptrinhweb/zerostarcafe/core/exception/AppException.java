@@ -19,6 +19,10 @@ public class AppException extends RuntimeException {
         super(message);
     }
 
+    public AppException(Throwable cause) {
+        super(cause);
+    }
+
     public AppException(String message, Throwable cause) {
         super(message, cause);
     }

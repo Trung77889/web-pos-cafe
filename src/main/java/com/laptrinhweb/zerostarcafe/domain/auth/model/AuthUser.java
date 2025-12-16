@@ -1,7 +1,10 @@
 package com.laptrinhweb.zerostarcafe.domain.auth.model;
 
 import com.laptrinhweb.zerostarcafe.domain.user.model.UserRole;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
@@ -20,23 +23,34 @@ import java.util.List;
  * }</pre>
  *
  * @author Dang Van Trung
- * @version 1.0.1
- * @lastModified 22/11/2025
+ * @version 1.0.2
+ * @lastModified 14/12/2025
  * @since 1.0.0
  */
-public record AuthUser(Long id, String username, String email, boolean isSuperAdmin,
-                       List<String> roleCodes) implements Serializable {
+
+@NoArgsConstructor
+@Getter
+public class AuthUser implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    private Long id;
+    private String username;
+    private String email;
+    private boolean superAdmin;
+    private List<String> roleCodes;
 
     public AuthUser(Long id,
                     String username,
                     String email,
-                    boolean isSuperAdmin,
+                    boolean superAdmin,
                     List<String> roleCodes) {
 
         this.id = id;
         this.username = username;
         this.email = email;
-        this.isSuperAdmin = isSuperAdmin;
+        this.superAdmin = superAdmin;
         this.roleCodes = (roleCodes == null)
                 ? List.of()
                 : List.copyOf(roleCodes);

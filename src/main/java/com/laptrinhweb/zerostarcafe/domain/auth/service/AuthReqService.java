@@ -1,10 +1,11 @@
 package com.laptrinhweb.zerostarcafe.domain.auth.service;
 
 import com.laptrinhweb.zerostarcafe.core.security.SecurityKeys;
+import com.laptrinhweb.zerostarcafe.domain.auth.dto.RequestInfoDTO;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthContext;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthResult;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthStatus;
-import com.laptrinhweb.zerostarcafe.domain.auth.request.AuthReqInfo;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Map;
 
@@ -28,16 +29,14 @@ import java.util.Map;
  * @lastModified 07/12/2025
  * @since 1.0.0
  */
-public class AuthReqService {
+
+@RequiredArgsConstructor
+public final class AuthReqService {
 
     private final AuthService authService;
 
     public AuthReqService() {
         this(new AuthService());
-    }
-
-    public AuthReqService(AuthService authService) {
-        this.authService = authService;
     }
 
     /**
@@ -48,7 +47,7 @@ public class AuthReqService {
      * @return auth result containing status and optional new context
      */
     public AuthResult<AuthStatus, AuthContext> handleRequest(
-            AuthReqInfo reqInfo,
+            RequestInfoDTO reqInfo,
             AuthContext currentContext
     ) {
         if (reqInfo == null)
@@ -57,7 +56,7 @@ public class AuthReqService {
         Map<String, String> reqTokens =
                 reqInfo.extractTokensByPrefix(SecurityKeys.AUTH_COOKIE_PREFIX);
 
-        if (reqTokens == null || reqTokens.isEmpty())
+        if (reqTokens.isEmpty())
             return AuthResult.fail(AuthStatus.SESSION_NOT_FOUND);
 
         if (currentContext != null && currentContext.isValid())
@@ -76,7 +75,7 @@ public class AuthReqService {
      */
     private AuthResult<AuthStatus, AuthContext> reAuthenticateFlow(
             AuthContext context,
-            AuthReqInfo reqInfo,
+            RequestInfoDTO reqInfo,
             Map<String, String> reqTokens
     ) {
         String authToken = context.getTokenValue(SecurityKeys.TOKEN_AUTH);
@@ -105,7 +104,7 @@ public class AuthReqService {
      * @return auth result with status and restored context if valid
      */
     private AuthResult<AuthStatus, AuthContext> restoreFlow(
-            AuthReqInfo reqInfo,
+            RequestInfoDTO reqInfo,
             Map<String, String> reqTokens
     ) {
         AuthContext restored = authService.restore(reqInfo, reqTokens);

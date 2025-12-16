@@ -1,7 +1,10 @@
 package com.laptrinhweb.zerostarcafe.domain.auth.model;
 
 import com.laptrinhweb.zerostarcafe.core.security.SecurityKeys;
+import lombok.Getter;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
@@ -13,16 +16,23 @@ import java.time.LocalDateTime;
  * </p>
  *
  * @author Dang Van Trung
- * @version 1.0.0
- * @lastModified 23/11/2025
+ * @version 1.0.1
+ * @lastModified 14/12/2025
  * @since 1.0.0
  */
-public class AuthSession {
 
-    private LocalDateTime expiredAt;
+@Getter
+public final class AuthSession implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    private final LocalDateTime expiredAt;
     private LocalDateTime lastRotatedAt;
 
-    public AuthSession() {
+    public AuthSession(LocalDateTime expiredAt) {
+        this.expiredAt = expiredAt;
+        this.lastRotatedAt = LocalDateTime.now();
     }
 
     /**
@@ -42,7 +52,7 @@ public class AuthSession {
      *
      * @return true if rotation is required
      */
-    public boolean shouldRotated() {
+    public boolean shouldRotate() {
         if (isExpired() || lastRotatedAt == null)
             return false;
 
@@ -51,19 +61,10 @@ public class AuthSession {
         return minutes >= SecurityKeys.REFRESH_MINUTES;
     }
 
-    public LocalDateTime getExpiredAt() {
-        return expiredAt;
-    }
-
-    public void setExpiredAt(LocalDateTime expiredAt) {
-        this.expiredAt = expiredAt;
-    }
-
-    public LocalDateTime getLastRotatedAt() {
-        return lastRotatedAt;
-    }
-
-    public void setLastRotatedAt(LocalDateTime lastRotatedAt) {
-        this.lastRotatedAt = lastRotatedAt;
+    /**
+     * Marks this session as rotated at the current time.
+     */
+    public void updateLastRotatedTime() {
+        this.lastRotatedAt = LocalDateTime.now();
     }
 }

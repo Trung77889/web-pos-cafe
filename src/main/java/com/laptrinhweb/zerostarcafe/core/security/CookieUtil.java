@@ -10,54 +10,17 @@ import java.util.Map;
 /**
  * <h2>Description:</h2>
  * <p>
- * Utility for managing secure HTTP Cookies.
- * Provides helpers to create, get, and clear cookies
- * with secure defaults (HttpOnly, Secure, Path=/, SameSite=Strict).
+ * Utility for retrieving and clearing HTTP Cookies.
  * </p>
  *
- * <h2>Example Usage:</h2>
- * <pre>
- * {@code
- * // Create a secure cookie
- * Cookie cookie = CookieUtil.create("myCookie", "value", 3600);
- * response.addCookie(cookie);
- * }
- * </pre>
- *
  * @author Dang Van Trung
- * @version 1.1.0
- * @lastModified 25/11/2025
+ * @version 2.0.0
+ * @lastModified 12/12/2025
  * @since 1.0.0
  */
 public final class CookieUtil {
 
     private CookieUtil() {
-    }
-
-    /**
-     * Creates a secure {@link Cookie} for authentication purposes.
-     *
-     * @param name          the cookie name
-     * @param value         the cookie value
-     * @param maxAgeSeconds the time to live (TTL) in seconds.
-     *                      If <= 0, the cookie is a session cookie.
-     * @return {@link Cookie} object
-     */
-    public static Cookie create(String name, String value, int maxAgeSeconds) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setAttribute("SameSite", "Strict");
-
-        if (maxAgeSeconds > 0) {
-            cookie.setMaxAge(maxAgeSeconds);
-        } else {
-            // session cookie: exists until the browser is closed
-            cookie.setMaxAge(-1);
-        }
-
-        return cookie;
     }
 
     /**
@@ -122,12 +85,7 @@ public final class CookieUtil {
             return;
         }
 
-        Cookie cookie = new Cookie(name, "");
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setMaxAge(0);
-
+        Cookie cookie = AppCookie.strict(name, "", 0);
         response.addCookie(cookie);
     }
 }

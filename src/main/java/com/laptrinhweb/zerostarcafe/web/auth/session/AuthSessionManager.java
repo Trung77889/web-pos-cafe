@@ -1,16 +1,18 @@
 package com.laptrinhweb.zerostarcafe.web.auth.session;
 
+import com.laptrinhweb.zerostarcafe.core.security.AppCookie;
 import com.laptrinhweb.zerostarcafe.core.security.CookieUtil;
 import com.laptrinhweb.zerostarcafe.core.security.SecurityKeys;
 import com.laptrinhweb.zerostarcafe.core.utils.TimeUtil;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthContext;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthToken;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthUser;
-import com.laptrinhweb.zerostarcafe.web.auth.mapper.AuthContextMapper;
+import com.laptrinhweb.zerostarcafe.web.auth.mapper.AuthWebMapper;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import lombok.Getter;
 
 import java.util.List;
 import java.util.Map;
@@ -31,20 +33,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * }</pre>
  *
  * @author Dang Van Trung
- * @version 1.1.0
- * @lastModified 29/11/2025
+ * @version 1.1.1
+ * @lastModified 13/12/2025
  * @since 1.0.0
  */
+
+@Getter
 public final class AuthSessionManager {
 
     private final ConcurrentHashMap<Long, HttpSession> userSessions;
 
     public AuthSessionManager(ConcurrentHashMap<Long, HttpSession> userSessions) {
         this.userSessions = userSessions;
-    }
-
-    public ConcurrentHashMap<Long, HttpSession> getUserSessions() {
-        return userSessions;
     }
 
     /**
@@ -55,11 +55,14 @@ public final class AuthSessionManager {
      * @return AuthContext or null if no session is found
      */
     public AuthContext getContext(HttpServletRequest request) {
+        if (request == null)
+            return null;
+
         HttpSession session = request.getSession(false);
         if (session == null)
             return null;
 
-        return AuthContextMapper.from(session);
+        return AuthWebMapper.toAuthContext(session);
     }
 
     /**
@@ -85,8 +88,8 @@ public final class AuthSessionManager {
 
         AuthUser user = context.getAuthUser();
         if (user != null) {
-            revokeSession(user.id());
-            userSessions.put(user.id(), session);
+            revokeSession(user.getId());
+            userSessions.put(user.getId(), session);
         }
 
         applyContext(session, context);
@@ -140,13 +143,11 @@ public final class AuthSessionManager {
             return;
         }
 
-        AuthContext context = AuthContextMapper.from(session);
+        AuthContext context = AuthWebMapper.toAuthContext(session);
         if (context != null && context.isValid()) {
-            String authToken = context.getTokenValue(SecurityKeys.TOKEN_AUTH);
-
             AuthUser user = context.getAuthUser();
             if (user != null) {
-                revokeSession(user.id());
+                revokeSession(user.getId());
             }
         }
 
@@ -193,12 +194,12 @@ public final class AuthSessionManager {
      */
     private void writeCookies(HttpServletResponse response, AuthContext context) {
         List<AuthToken> tokens = context.getTokens();
-        if (tokens == null || tokens.isEmpty()) {
+        if (tokens.isEmpty()) {
             return;
         }
 
         for (AuthToken token : tokens) {
-            Cookie cookie = CookieUtil.create(
+            Cookie cookie = AppCookie.strict(
                     token.getName(),
                     token.getValue(),
                     TimeUtil.ttlFromNow(token.getExpiredAt())

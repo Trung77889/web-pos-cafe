@@ -37,9 +37,10 @@ public interface AuthRecordDAO {
      * Persists a new {@link AuthRecord}.
      *
      * @param record the record to insert
+     * @return the saved record with generated ID
      * @throws SQLException if a database access error occurs
      */
-    void save(AuthRecord record) throws SQLException;
+    AuthRecord save(AuthRecord record) throws SQLException;
 
     /**
      * Retrieves a valid token by its authHash.

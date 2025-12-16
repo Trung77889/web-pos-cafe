@@ -1,11 +1,9 @@
 package com.laptrinhweb.zerostarcafe.domain.auth.record;
 
 import com.laptrinhweb.zerostarcafe.core.exception.AppException;
-import com.laptrinhweb.zerostarcafe.core.security.SecurityKeys;
 import com.laptrinhweb.zerostarcafe.core.security.TokenUtil;
-import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthContext;
-import com.laptrinhweb.zerostarcafe.domain.auth.model.TokenStatus;
-import com.laptrinhweb.zerostarcafe.domain.auth.request.AuthReqInfo;
+import com.laptrinhweb.zerostarcafe.domain.auth.dto.RequestInfoDTO;
+import lombok.NonNull;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -28,11 +26,11 @@ import java.util.Optional;
  * </pre>
  *
  * @author Dang Van Trung
- * @version 1.0.1
- * @lastModified 07/12/2025
+ * @version 1.0.2
+ * @lastModified 13/12/2025
  * @since 1.0.0
  */
-public class AuthRecordService {
+public final class AuthRecordService {
 
     private final AuthRecordDAO recordDAO;
 
@@ -41,115 +39,60 @@ public class AuthRecordService {
     }
 
     /**
-     * Create a new auth record based on the given context and request info.
+     * Revoke all active auth records for the given userID.
+     * Saved the new record in the database.
      *
-     * @param ctx     the authentication context
-     * @param reqInfo the request information (IP, user-agent, cookies)
+     * @param userId    the user ID owning the record
+     * @param newRecord the auth record to persist
+     * @return the persisted record
      */
-    public void create(
-            AuthContext ctx,
-            AuthReqInfo reqInfo
+    public AuthRecord save(
+            @NonNull Long userId,
+            @NonNull AuthRecord newRecord
     ) {
-        AuthRecord record = new AuthRecord();
-
-        Long userId = ctx.getAuthUser().id();
-        record.setUserId(userId);
-
-        record.setAuthHash(TokenUtil.hashToken(ctx.getTokenValue(SecurityKeys.TOKEN_AUTH)));
-        record.setDeviceId(TokenUtil.hashToken(ctx.getTokenValue(SecurityKeys.TOKEN_DEVICE_ID)));
-        record.setStatus(TokenStatus.ACTIVE);
-
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiredAt = ctx.getSessionInfo().getExpiredAt();
-
-        record.setCreatedAt(now);
-        record.setExpiredAt(expiredAt);
-        record.setLastRotatedAt(now);
-
-        record.setIpLast(reqInfo.getIpAddress());
-        record.setUserAgent(reqInfo.getUserAgent());
-
         try {
             revokeAllByUserId(userId);
-            recordDAO.save(record);
+            return recordDAO.save(newRecord);
         } catch (SQLException e) {
-            throw new AppException("FAIL TO INSERT NEW AUTH RECORD", e);
-        }
-    }
-
-    /**
-     * Update an existing auth record using the latest context data.
-     *
-     * @param ctx     the new authentication context
-     * @param reqInfo the request information
-     */
-    public void updateByContext(
-            AuthContext ctx,
-            AuthReqInfo reqInfo
-    ) {
-
-        if (ctx == null || !ctx.isValid())
-            return;
-
-        String authToken = ctx.getTokenValue(SecurityKeys.TOKEN_AUTH);
-        String authHash = TokenUtil.hashToken(authToken);
-
-        try {
-            Optional<AuthRecord> recordOpt = recordDAO.findValidByAuthHash(authHash);
-            if (recordOpt.isEmpty())
-                return;
-
-            AuthRecord record = recordOpt.get();
-
-            record.setAuthHash(authHash);
-            record.setIpLast(reqInfo.getIpAddress());
-            record.setUserAgent(reqInfo.getUserAgent());
-            record.setLastRotatedAt(ctx.getSessionInfo().getLastRotatedAt());
-
-            recordDAO.save(record);
-
-        } catch (SQLException e) {
-            throw new AppException("FAIL TO UPDATE AUTH RECORD BY CONTEXT", e);
+            throw new AppException("Fail to insert new Auth Record", e);
         }
     }
 
     /**
      * Update an auth record using the previous token value.
      *
-     * @param ctx      the new authentication context
      * @param reqInfo  the request information
-     * @param oldToken the previous raw token value
+     * @param newToken the new raw token value
+     * @param oldToken the previous raw token value to find the record
      */
     public void updateByToken(
-            AuthContext ctx,
-            AuthReqInfo reqInfo,
-            String oldToken
+            @NonNull RequestInfoDTO reqInfo,
+            @NonNull String newToken,
+            @NonNull String oldToken
     ) {
-        if (ctx == null || !ctx.isValid())
-            return;
-
         String oldHash = TokenUtil.hashToken(oldToken);
 
         try {
-            Optional<AuthRecord> tokenOpt = recordDAO.findValidByAuthHash(oldHash);
-
-            if (tokenOpt.isEmpty())
+            // Find the record to update
+            Optional<AuthRecord> recordOpt = recordDAO.findValidByAuthHash(oldHash);
+            if (recordOpt.isEmpty())
                 return;
 
-            AuthRecord token = tokenOpt.get();
+            AuthRecord record = recordOpt.get();
 
-            String newToken = ctx.getTokenValue(SecurityKeys.TOKEN_AUTH);
+            // Generate token hash from the new token in context
             String newHash = TokenUtil.hashToken(newToken);
 
-            token.setAuthHash(newHash);
-            token.setIpLast(reqInfo.getIpAddress());
-            token.setUserAgent(reqInfo.getUserAgent());
-            token.setLastRotatedAt(ctx.getSessionInfo().getLastRotatedAt());
+            // Update record with new metadata
+            record.setAuthHash(newHash);
+            record.setIpLast(reqInfo.getIpAddress());
+            record.setUserAgent(reqInfo.getUserAgent());
+            record.setLastRotatedAt(LocalDateTime.now());
 
-            recordDAO.save(token);
-
+            // Save the updated record
+            recordDAO.save(record);
         } catch (SQLException e) {
-            throw new AppException("FAIL TO UPDATE AUTH RECORD BY TOKEN=" + oldToken, e);
+            throw new AppException("Fail to update Auth Record by token=" + oldToken, e);
         }
     }
 
@@ -159,13 +102,10 @@ public class AuthRecordService {
      * @param userId the user ID
      */
     public void revokeAllByUserId(Long userId) {
-        if (userId == null)
-            return;
-
         try {
             recordDAO.revokeAllByUserId(userId);
         } catch (SQLException e) {
-            throw new AppException("FAIL TO REVOKE AUTH RECORD BY USER_ID=" + userId, e);
+            throw new AppException("Fail to revoke Auth Record by UserId=" + userId, e);
         }
     }
 
@@ -183,7 +123,7 @@ public class AuthRecordService {
         try {
             recordDAO.revokeByAuthHash(hash);
         } catch (SQLException e) {
-            throw new AppException("FAIL TO REVOKE AUTH RECORD BY TOKEN=" + rawToken, e);
+            throw new AppException("Fail to revoke Auth Record by token=" + rawToken, e);
         }
     }
 
@@ -202,7 +142,7 @@ public class AuthRecordService {
         try {
             return recordDAO.findValidByAuthHash(hash);
         } catch (SQLException e) {
-            throw new AppException("FAIL TO FIND VALID AUTH RECORD BY TOKEN=" + rawToken, e);
+            throw new AppException("Fail to find valid Auth Record by token=" + rawToken, e);
         }
     }
 }
