@@ -1,4 +1,4 @@
-package com.laptrinhweb.zerostarcafe.domain.auth_token;
+package com.laptrinhweb.zerostarcafe.domain.auth.record;
 
 import java.sql.SQLException;
 import java.util.Optional;
@@ -6,7 +6,7 @@ import java.util.Optional;
 /**
  * <h2>Description:</h2>
  * <p>
- * Provides data access operations for the {@link AuthToken} entity,
+ * Provides data access operations for the {@link AuthRecord} entity,
  * representing long-lived authentication tokens used for session management.
  * </p>
  *
@@ -20,10 +20,10 @@ import java.util.Optional;
  *
  * <h2>Example Usage:</h2>
  * <pre>{@code
- * AuthTokenDAO dao = new AuthTokenDAOImpl(connection);
+ * AuthRecordDAO dao = new AuthRecordDAOImpl(connection);
  * dao.save(token);
  *
- * Optional<AuthToken> t = dao.findValidByAuthHash(hash);
+ * Optional<AuthRecord> t = dao.findValidByAuthHash(hash);
  * }</pre>
  *
  * @author Dang Van Trung
@@ -31,15 +31,16 @@ import java.util.Optional;
  * @lastModified 16/11/2025
  * @since 1.0.0
  */
-public interface AuthTokenDAO {
+public interface AuthRecordDAO {
 
     /**
-     * Persists a new {@link AuthToken}.
+     * Persists a new {@link AuthRecord}.
      *
-     * @param token the token to insert
+     * @param record the record to insert
+     * @return the saved record with generated ID
      * @throws SQLException if a database access error occurs
      */
-    void save(AuthToken token) throws SQLException;
+    AuthRecord save(AuthRecord record) throws SQLException;
 
     /**
      * Retrieves a valid token by its authHash.
@@ -49,7 +50,7 @@ public interface AuthTokenDAO {
      * @return optional found token
      * @throws SQLException if a database access error occurs
      */
-    Optional<AuthToken> findValidByAuthHash(String authHash) throws SQLException;
+    Optional<AuthRecord> findValidByAuthHash(String authHash) throws SQLException;
 
     /**
      * Revokes all tokens associated with a user.

@@ -1,9 +1,10 @@
-package com.laptrinhweb.zerostarcafe.web.common.filters;
+package com.laptrinhweb.zerostarcafe.web.auth.filter;
 
 import com.laptrinhweb.zerostarcafe.core.security.SecurityKeys;
 import com.laptrinhweb.zerostarcafe.core.utils.Flash;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthUser;
 import com.laptrinhweb.zerostarcafe.domain.user.model.UserRole;
+import com.laptrinhweb.zerostarcafe.web.common.routing.AppRoute;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,8 +29,8 @@ import java.io.IOException;
  * </pre>
  *
  * @author Dang Van Trung
- * @version 1.0.0
- * @lastModified 17/11/2025
+ * @version 1.0.1
+ * @lastModified 13/12/2025
  * @since 1.0.0
  */
 @WebFilter(filterName = "RoleFilter", urlPatterns = {
@@ -54,7 +55,7 @@ public class RoleFilter implements Filter {
         // User not logged in -> redirect to home
         if (user == null) {
             flash.error("general.error.userNotLoggedIn").send();
-            response.sendRedirect(request.getContextPath() + "/home");
+            AppRoute.HOME.redirect(request, response);
             return;
         }
 
@@ -64,17 +65,17 @@ public class RoleFilter implements Filter {
 
         // Check individual role requirements
         if (path.startsWith("/admin/") && !user.hasRole(UserRole.SUPER_ADMIN)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            AppRoute.sendError(HttpServletResponse.SC_FORBIDDEN, response);
             return;
         }
 
         if (path.startsWith("/manager/") && !user.hasRole(UserRole.STORE_MANAGER)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            AppRoute.sendError(HttpServletResponse.SC_FORBIDDEN, response);
             return;
         }
 
         if (path.startsWith("/staff/") && !user.hasRole(UserRole.STAFF)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            AppRoute.sendError(HttpServletResponse.SC_FORBIDDEN, response);
             return;
         }
 

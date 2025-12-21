@@ -1,8 +1,6 @@
-package com.laptrinhweb.zerostarcafe.domain.user;
+package com.laptrinhweb.zerostarcafe.domain.user.model;
 
-import com.laptrinhweb.zerostarcafe.domain.auth.dto.RegisterDTO;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthUser;
-import com.laptrinhweb.zerostarcafe.domain.user.model.User;
 import com.laptrinhweb.zerostarcafe.domain.user_role.UserStoreRole;
 
 import java.util.ArrayList;
@@ -26,8 +24,8 @@ import java.util.List;
  * }</pre>
  *
  * @author Dang Van Trung
- * @version 1.0.1
- * @lastModified 11/11/2025
+ * @version 1.0.2
+ * @lastModified 16/12/2025
  * @since 1.0.0
  */
 public class UserMapper {
@@ -35,11 +33,7 @@ public class UserMapper {
     private UserMapper() {
     }
 
-    public static User fromRegister(RegisterDTO dto) {
-        return new User(dto.email(), dto.username(), null);
-    }
-
-    public static AuthUser toAuthenticatedUser(User user, List<UserStoreRole> storeRoles) {
+    public static AuthUser toAuthUser(User user, List<UserStoreRole> storeRoles) {
         List<String> roleCodes = new ArrayList<>();
 
         // Iterate through the list of user roles at the store
