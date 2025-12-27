@@ -3,17 +3,19 @@ package com.laptrinhweb.zerostarcafe.domain.admin.dto;
 public class Product {
     private int id;
     private String name;
+    private int categoryId;
+    private String categoryName;
     private String picUrl;
-    private int price;
+    private double price;
     private String description;
     private double inventory;
-    private boolean is_active;
+    private boolean active;
     private String unit;
 
     public Product() {
     }
 
-    public Product(int id, String unit, double inventory, String description, int price, String picUrl, String name) {
+    public Product(int id, String unit, double inventory, String description, double price, String picUrl, boolean active, String name) {
         this.id = id;
         this.unit = unit;
         this.inventory = inventory;
@@ -21,6 +23,23 @@ public class Product {
         this.price = price;
         this.picUrl = picUrl;
         this.name = name;
+        this.active = active;
+    }
+
+    public int getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 
     public int getId() {
@@ -47,11 +66,11 @@ public class Product {
         this.picUrl = picUrl;
     }
 
-    public int getPrice() {
+    public double getPrice() {
         return price;
     }
 
-    public void setPrice(int price) {
+    public void setPrice(double price) {
         this.price = price;
     }
 
@@ -71,12 +90,12 @@ public class Product {
         this.inventory = inventory;
     }
 
-    public boolean isIs_active() {
-        return is_active;
+    public boolean isActive() {
+        return active;
     }
 
-    public void setIs_active(boolean is_active) {
-        this.is_active = is_active;
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public String getUnit() {

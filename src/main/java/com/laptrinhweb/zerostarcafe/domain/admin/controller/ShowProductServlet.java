@@ -1,6 +1,7 @@
-package com.laptrinhweb.zerostarcafe.domain.admin.AdminController;
+package com.laptrinhweb.zerostarcafe.domain.admin.controller;
 
-import com.laptrinhweb.zerostarcafe.domain.admin.AdminDAO.AdminDAO;
+import com.laptrinhweb.zerostarcafe.domain.admin.dao.AdminDAO;
+import com.laptrinhweb.zerostarcafe.domain.admin.dto.Category;
 import com.laptrinhweb.zerostarcafe.domain.admin.dto.Product;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -12,20 +13,25 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-@WebServlet(name = "ProductShowServlet", value = "/admin/products")
-public class ProductShowServlet extends HttpServlet {
+@WebServlet(name = "ShowProductServlet", value = "/admin/products")
+public class ShowProductServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         AdminDAO dao = new AdminDAO();
         try {
             List<Product> productsList = dao.getAllProductsByStore(1);
-
             request.setAttribute("productsList", productsList);
-            request.setAttribute("pageContent", "/WEB-INF/views/admin/pages/dashboard.jsp");
+            List<Category> categoriesList = dao.getAllCategories();
+            request.setAttribute("categoriesList", categoriesList);
+            request.setAttribute("pageId", "product");
+
+            request.setAttribute("pageContent", "/WEB-INF/views/admin/pages/products.jsp");
             request.getRequestDispatcher("/WEB-INF/views/admin/layouts/admin-layout.jsp")
                     .forward(request, response);
         } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }

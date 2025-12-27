@@ -27,7 +27,7 @@ import java.io.IOException;
  * @lastModified 09/12/2025
  * @since 1.0.0
  */
-public record View(
+public record   View(
         ViewArea area,
         String titleKey,
         String pagePath,
