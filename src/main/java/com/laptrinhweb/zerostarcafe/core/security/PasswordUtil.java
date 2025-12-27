@@ -93,4 +93,5 @@ public final class PasswordUtil {
         char[] buf = plainPassword.toCharArray();
         return verify(hash, buf);
     }
+
 }
