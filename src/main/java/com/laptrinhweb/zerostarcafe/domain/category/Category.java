@@ -31,6 +31,7 @@ import lombok.Setter;
 public class Category {
     private Long id;
     private String name;
+    private String slug;
     private String iconUrl;
     private int orderIndex;
     private boolean active;

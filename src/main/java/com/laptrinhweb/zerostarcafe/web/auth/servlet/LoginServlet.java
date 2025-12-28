@@ -29,8 +29,8 @@ import java.util.Map;
  * Handles user login: validate → authenticate → create session → issue cookies.
  *
  * @author Dang Van Trung
- * @version 1.0.2
- * @lastModified 13/12/2025
+ * @version 1.0.3
+ * @lastModified 28/12/2025
  * @since 1.0.0
  */
 @WebServlet(name = "LoginServlet", urlPatterns = "/auth/login")
@@ -53,10 +53,7 @@ public class LoginServlet extends HttpServlet {
             throws ServletException, IOException {
 
         // Read login form data
-        String username = req.getParameter("loginUsername");
-        String password = req.getParameter("loginPassword");
-
-        LoginDTO form = new LoginDTO(username, password);
+        LoginDTO form = AuthWebMapper.toLoginDTO(req);
 
         // Validate input
         ValidationResult validation = form.validate();

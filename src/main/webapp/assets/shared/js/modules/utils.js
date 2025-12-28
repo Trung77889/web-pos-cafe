@@ -111,33 +111,128 @@ export function setupLogging() {
  * Reads SSR-rendered flash messages from the DOM and displays them as toasts.
  * - If the message type is supported by the Toast system, it is displayed.
  * - Otherwise, a generic "normal" toast is shown.
- * - The container is removed after processing.
  *
  * @returns {void}
  */
 export function getFlashMessages() {
-    const container = document.querySelector('.toast-container');
-    if (!container) return;
+    const flashData = document.querySelector('#flash-data');
+    if (!flashData) return;
 
-    container.querySelectorAll('p[data-type][data-message]').forEach(p => {
+    flashData.querySelectorAll('p[data-type][data-message]').forEach(p => {
         const type = p.dataset.type;
         const msg = p.dataset.message;
         if (Toast[type]) Toast[type](msg);
         else Toast.normal('', msg);
     });
-    container.remove();
 }
 
 /**
- * Reads SSR-rendered metadata from the DOM to determine
- * which modal (if any) should be reopened automatically.
+ * Stores modal state globally for reopening after server responses.
+ * This allows server-side form responses to trigger modal reopening.
+ * 
+ * @type {string|null}
+ * @private
+ */
+let pendingModalToOpen = null;
+
+/**
+ * Sets the modal that should be reopened from server response.
+ * Called by response handlers when .set("openModal", "modalName") is used.
  *
- * @returns {string|null} The modal name to reopen, or null if none found.
+ * @param {string|null} modalName - The modal name to open, or null to clear.
+ * @returns {void}
+ */
+export function setPendingModal(modalName) {
+    pendingModalToOpen = modalName;
+}
+
+/**
+ * Gets the pending modal name and clears the stored value.
+ * Returns which modal (if any) should be reopened automatically.
+ * Checks two sources:
+ * 1. Runtime variable (from form response handler)
+ * 2. DOM data attribute (from server-side flash on page load)
+ *
+ * @returns {string|null} The modal name to reopen, or null if none pending.
  */
 export function getReopenModal() {
-    const container = document.querySelector('#modal-template');
-    if (!container) return null;
+    // First priority: runtime pending modal (from form response)
+    if (pendingModalToOpen) {
+        const modalToOpen = pendingModalToOpen;
+        pendingModalToOpen = null;
+        return modalToOpen;
+    }
+    
+    // Second priority: DOM flash data (from server-side SSR on page load)
+    const flashData = document.querySelector('#flash-data');
+    if (flashData && flashData.dataset.openModal) {
+        return flashData.dataset.openModal;
+    }
+    
+    return null;
+}
 
-    const marker = container.querySelector('p[data-open-modal]');
-    return marker ? marker.dataset.openModal : null;
+/**
+ * Refills form fields with values from server flash data.
+ * Used to restore form state when modal reopens after failed submission.
+ * Should be called AFTER modal HTML is rendered in the DOM.
+ * 
+ * @returns {void}
+ */
+export function refillFormData() {
+    const flashData = document.querySelector('#flash-data');
+    if (!flashData) {
+        console.debug('No #flash-data found');
+        return;
+    }
+    
+    // Get all hidden inputs with form data
+    const inputs = flashData.querySelectorAll('input[type="hidden"][name]');
+    console.debug(`Found ${inputs.length} form data inputs to refill`);
+    
+    inputs.forEach(input => {
+        const fieldName = input.name;
+        const fieldValue = input.value;
+        
+        console.debug(`Refilling field: ${fieldName} = ${fieldValue}`);
+        
+        // Find form field in all forms and set value
+        // Try by: name attribute, id, or constructed id pattern
+        const selectors = [
+            `input[name="${fieldName}"]`,
+            `textarea[name="${fieldName}"]`,
+            `select[name="${fieldName}"]`,
+            `#${fieldName}`,
+        ];
+        
+        let found = false;
+        selectors.forEach(selector => {
+            const field = document.querySelector(selector);
+            if (field && !field.closest('#flash-data')) {
+                field.value = fieldValue;
+                found = true;
+                console.debug(`  ✓ Set via selector: ${selector}`);
+            }
+        });
+        
+        if (!found) {
+            console.debug(`  ✗ Field "${fieldName}" not found in DOM`);
+        }
+    });
+}
+
+/**
+ * Registers the global response handler.
+ * Processes server response data including modal reopening.
+ * Call this once during app initialization.
+ *
+ * @returns {void}
+ */
+export function initResponseHandler() {
+    window.__handleFormResponse__ = function(responseData) {
+        if (!responseData || typeof responseData !== 'object') return;
+        if (responseData.openModal) {
+            setPendingModal(responseData.openModal);
+        }
+    };
 }

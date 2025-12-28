@@ -145,6 +145,18 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Override
+    public Optional<User> findByEmail(String email) throws SQLException {
+        String sql = "SELECT * FROM users WHERE email=?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return Optional.of(rowMapper(rs));
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
     public List<User> findAll() throws SQLException {
         String sql = "SELECT * FROM users ORDER BY created_at DESC";
         List<User> list = new ArrayList<>();

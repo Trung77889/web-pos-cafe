@@ -39,7 +39,7 @@ public class CategoryDAOImpl implements CategoryDAO {
     @Override
     public List<Category> findAllByIsActiveTrueOrderByOrderIndexAsc() throws SQLException {
         String sql = """
-                SELECT id, name, icon_url, order_index, is_active
+                SELECT id, name, slug, icon_url, order_index, is_active
                 FROM categories
                 WHERE is_active = TRUE
                 ORDER BY order_index ASC
@@ -58,6 +58,27 @@ public class CategoryDAOImpl implements CategoryDAO {
         return list;
     }
 
+    @Override
+    public Category findBySlug(String slug) throws SQLException {
+        String sql = """
+                SELECT id, name, slug, icon_url, order_index, is_active
+                FROM categories
+                WHERE slug = ? AND is_active = TRUE
+                """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, slug);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rowMapper(rs);
+                }
+            }
+        }
+
+        return null;
+    }
+
     // ==========================================================
     // MAPPING UTIL
     // ==========================================================
@@ -67,6 +88,7 @@ public class CategoryDAOImpl implements CategoryDAO {
 
         c.setId(rs.getLong("id"));
         c.setName(rs.getString("name"));
+        c.setSlug(rs.getString("slug"));
         c.setIconUrl(rs.getString("icon_url"));
         c.setOrderIndex(rs.getInt("order_index"));
         c.setActive(rs.getBoolean("is_active"));

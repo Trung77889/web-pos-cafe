@@ -1,5 +1,5 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<base href="${pageContext.request.contextPath}/">
+<base href="${pageContext.request.contextPath}/"/>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -37,23 +37,35 @@
     <%-- Including the footer component --%>
     <jsp:include page="/WEB-INF/views/client/layouts/footer.jsp"/>
 
-    <%-- Flash message --%>
-    <c:if test="${not empty requestScope.messages}">
-        <div class="toast-container" hidden>
-            <c:forEach var="msg" items="${requestScope.messages}">
-                <p data-type="${msg.type}"
-                   data-message="${sessionScope.i18n.trans(msg.msgKey)}">
-                </p>
-            </c:forEach>
+    <%-- Modal container --%>
+    <div id="modal-container"></div>
+
+    <%-- Flash data: messages for toasts, and form state for modal reopening --%>
+    <c:if test="${not empty requestScope.messages or not empty requestScope.openModal or not empty requestScope.formData}">
+        <div id="flash-data" hidden
+             data-open-modal="${requestScope.openModal}"
+             data-messages='${requestScope.messages != null ? "true" : "false"}'
+        >
+                <%-- Toast messages --%>
+            <c:if test="${not empty requestScope.messages}">
+                <c:forEach var="msg" items="${requestScope.messages}">
+                    <p data-type="${msg.type}" data-message="${sessionScope.i18n.trans(msg.msgKey)}"></p>
+                </c:forEach>
+            </c:if>
+
+                <%-- Form refill data --%>
+            <c:if test="${not empty requestScope.formData}">
+                <c:forEach var="entry" items="${requestScope.formData}">
+                    <input type="hidden" name="${entry.key}" value="${entry.value}"/>
+                </c:forEach>
+            </c:if>
         </div>
     </c:if>
 
     <%-- Script --%>
-    <script>
-        window.__APP_MODE__ = "${initParam.APP_MODE}";
-    </script>
     <script src="assets/shared/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="assets/shared/js/base.js"></script>
     <script type="module" src="assets/client/js/main.js"></script>
+    <script type="module" src="assets/client/js/modules/mobile-nav.js"></script>
 </body>
 </html>

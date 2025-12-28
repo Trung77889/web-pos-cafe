@@ -39,4 +39,15 @@ public class CategoryService {
         }
     }
 
+    public Category getCategoryBySlug(String slug) {
+        try (Connection conn = DBConnection.getConnection()) {
+            CategoryDAO categoryDAO = new CategoryDAOImpl(conn);
+            return categoryDAO.findBySlug(slug);
+        } catch (SQLException e) {
+            LoggerUtil.warn(Category.class,
+                    "Failed to get category by slug: " + slug + " - " + e.getMessage());
+            return null;
+        }
+    }
+
 }

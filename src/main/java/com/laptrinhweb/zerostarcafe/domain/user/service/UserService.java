@@ -91,16 +91,16 @@ public class UserService {
     }
 
     /**
-     * Loads an active user by username.
+     * Loads an active user by email.
      * Only users with ACTIVE status are returned.
      *
-     * @param username the username to search
+     * @param email the username to search
      * @return the active user, or null if not found or not active
      * @throws AppException if a SQL error occurs
      */
-    public User getActiveByUsername(String username) {
+    public User getActiveByEmail(String email) {
         try {
-            Optional<User> userOpt = userDAO.findByUsername(username);
+            Optional<User> userOpt = userDAO.findByEmail(email);
             if (userOpt.isEmpty())
                 return null;
 
@@ -111,7 +111,7 @@ public class UserService {
 
             return user;
         } catch (SQLException e) {
-            throw new AppException("Fail to get active user by username=" + username, e);
+            throw new AppException("Fail to get active user by email=" + email, e);
         }
     }
 

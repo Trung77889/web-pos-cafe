@@ -3,43 +3,49 @@
  * Module: Modal Manager
  * ------------------------------------------------------------
  * @description
- * Lightweight modal manager built on top of Bootstrap Modal API.
- * Designed for SSR setups where modal templates are preloaded
- * as <script type="text/template"> in the DOM.
- *
- * Supports:
- * - Opening modals from pre-rendered templates.
- * - Caching cleaned versions after close.
- * - Automatic transition handling when switching modals.
+ * Simple dynamic modal management system built on top of
+ * **Bootstrap Modal API**. It allows you to load, cache, and display modal
+ * partials (JSP/HTML fragments) asynchronously from the server.
  *
  * @example
- * Modal.init({ TRIGGER_SELECTOR: '.btn-open-modal' });
- * Modal.open('register');
+ * import { Modal } from './modules/modal.js';
  *
- * @version 1.1.0
+ * // Initialize the modal system
+ * Modal.init({
+ *   CONTAINER_SELECTOR: '#modal-container',
+ *   TRIGGER_SELECTOR: '.btn-open-modal',
+ *   preloadList: ['login', 'register'],
+ * });
+ *
+ * // Open a modal programmatically
+ * Modal.open('login');
+ *
+ * @version 1.0.2
  * @since 1.0.0
- * @lastModified 10/11/2025
+ * @lastModified 28/12/2025
  * @module modal
  * @author Dang Van Trung
  */
 
-import {getOrCreateContainer} from './utils.js'
+import { getOrCreateContainer } from "./utils.js";
 
 const CONFIG = {
-    CONTAINER_SELECTOR: '#modal-container',
-    TEMPLATE_SELECTOR: '#modal-template',
-    TRIGGER_SELECTOR: '.btn-open-modal',
+  CONTAINER_SELECTOR: "#modal-container",
+  TRIGGER_SELECTOR: ".btn-open-modal",
 };
 
-const MODAL_SELECTOR = '.modal';
-const VISIBLE_MODAL_SELECTOR = '.modal.show';
+const MODAL_SELECTOR = ".modal";
+const VISIBLE_MODAL_SELECTOR = ".modal.show";
 const CACHE = {};
 const CONTAINER_EL = getOrCreateContainer(CONFIG.CONTAINER_SELECTOR);
-const TEMPLATE_EL = document.querySelector(CONFIG.TEMPLATE_SELECTOR);
 
-function getTemplate(name) {
-    const tpl = TEMPLATE_EL.querySelector(`#tpl-modal-${name}`);
-    return tpl ? tpl.innerHTML.trim() : null;
+/**
+ * Builds the fetch URL for a modal file based on its name.
+ * @param {string} name - The short name of the modal (e.g., 'login').
+ * @returns {string} The encoded URL to the modal resource.
+ */
+function modalUrl(name) {
+  return `./modals?name=${encodeURIComponent(name)}`;
 }
 
 /**
@@ -51,23 +57,23 @@ function getTemplate(name) {
  * @returns {string}
  */
 function sanitizeModal(modalEl) {
-    const clone = modalEl.cloneNode(true);
+  const clone = modalEl.cloneNode(true);
 
-    clone.querySelectorAll('input, textarea, select')
-        .forEach(el => {
-            el.classList.remove('is-invalid', 'is-valid');
-            el.value = '';
-            el.removeAttribute('value');
-            if (el.type === 'checkbox' || el.type === 'radio') {
-                el.checked = false;
-                el.removeAttribute('checked');
-            }
-        });
+  clone.querySelectorAll("input, textarea, select").forEach((el) => {
+    el.classList.remove("is-invalid", "is-valid");
+    el.value = "";
+    el.removeAttribute("value");
+    if (el.type === "checkbox" || el.type === "radio") {
+      el.checked = false;
+      el.removeAttribute("checked");
+    }
+  });
 
-    clone.querySelectorAll('.invalid-feedback')
-        .forEach(el => el.textContent = '');
+  clone
+    .querySelectorAll(".invalid-feedback")
+    .forEach((el) => (el.textContent = ""));
 
-    return clone.outerHTML;
+  return clone.outerHTML;
 }
 
 /**
@@ -77,17 +83,72 @@ function sanitizeModal(modalEl) {
  * @returns {void}
  */
 function injectAndShow(modalHTML, name) {
-    CONTAINER_EL.innerHTML = modalHTML;
-    const modalEl = CONTAINER_EL.querySelector(MODAL_SELECTOR);
-    if (!modalEl) return console.error(`ModalManager - No ${MODAL_SELECTOR} found`);
+  CONTAINER_EL.innerHTML = modalHTML;
+  const modalEl = CONTAINER_EL.querySelector(MODAL_SELECTOR);
+  if (!modalEl)
+    return console.error(`ModalManager - No ${MODAL_SELECTOR} found`);
 
-    modalEl.addEventListener('hidden.bs.modal', () => {
-        const cleanHTML = sanitizeModal(modalEl);
-        CACHE[name] = cleanHTML;
-        modalEl.remove();
-    }, {once: true});
+  modalEl.addEventListener(
+    "hidden.bs.modal",
+    () => {
+      const cleanHTML = sanitizeModal(modalEl);
+      CACHE[name] = cleanHTML;
+      modalEl.remove();
+    },
+    { once: true }
+  );
 
-    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+  bootstrap.Modal.getOrCreateInstance(modalEl).show();
+}
+
+/**
+ * Binds event listeners to reset form fields and validation states.
+ * @param {HTMLElement} modalEl - The modal element to bind listeners to.
+ * @param {string} modalName - The name of the modal (e.g., 'login').
+ * @returns {void}
+ */
+function bindModalReset(modalEl, modalName) {
+  modalEl.addEventListener("hidden.bs.modal", () => {
+    const form = modalEl.querySelector("form");
+    if (!form) return;
+    form.reset();
+    form
+      .querySelectorAll(".is-invalid, .is-valid")
+      .forEach((el) => el.classList.remove("is-invalid", "is-valid"));
+    form
+      .querySelectorAll(".invalid-feedback")
+      .forEach((el) => (el.textContent = ""));
+    CACHE[modalName] = modalEl;
+  });
+}
+
+/**
+ * Fetches a modal HTML file from the server and caches it.
+ * @async
+ * @param {string} name - The name of the modal to fetch.
+ * @returns {Promise<string|null>} The modal HTML string, or `null` if fetch fails.
+ */
+async function fetchModal(name) {
+  try {
+    const res = await fetch(modalUrl(name));
+    if (!res.ok) throw new Error(`Failed to fetch modal ${name}`);
+    const modalHTML = await res.text();
+    CACHE[name] = modalHTML;
+    return modalHTML;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+/**
+ * Preloads and caches multiple modals in parallel.
+ * @async
+ * @param {string[]} [names=[]] - List of modal names to preload.
+ * @returns {Promise<void>}
+ */
+async function preload(names = []) {
+  await Promise.all(names.map(async (item) => CACHE[item] || fetchModal(item)));
 }
 
 /**
@@ -96,20 +157,60 @@ function injectAndShow(modalHTML, name) {
  * @returns {void}
  */
 async function open(name) {
-    if (!name) return;
-    const current = document.querySelector(VISIBLE_MODAL_SELECTOR);
+  if (!name) return;
+  const current = document.querySelector(VISIBLE_MODAL_SELECTOR);
 
-    async function loadAndShow() {
-        const modalHTML = CACHE[name] || getTemplate(name);
-        if (modalHTML) injectAndShow(modalHTML, name);
+  async function loadAndShow() {
+    const modalHTML = CACHE[name] || (await fetchModal(name));
+    if (modalHTML) injectAndShow(modalHTML, name);
+  }
+
+  if (!current) return loadAndShow();
+  const instance = bootstrap.Modal.getInstance(current);
+  current.addEventListener("hidden.bs.modal", loadAndShow, { once: true });
+
+  document.activeElement?.blur();
+  instance.hide();
+}
+
+/**
+ * Opens a modal with custom fetch URL (for dynamic content).
+ * Useful for modals that need server-side data (e.g., product details).
+ * @param {string|Function} urlOrFunction - URL string or function that returns URL
+ * @param {Function} [setupCallback] - Optional callback to setup handlers after modal loads
+ * @returns {Promise<HTMLElement|null>} The modal element or null if failed
+ */
+async function openDynamic(urlOrFunction, setupCallback) {
+  const url = typeof urlOrFunction === "function" ? urlOrFunction() : urlOrFunction;
+  
+  try {
+    const response = await fetch(url, { headers: { "Accept": "text/html" } });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
+    const modalHTML = await response.text();
+    CONTAINER_EL.innerHTML = modalHTML;
+    
+    const modalEl = CONTAINER_EL.querySelector(MODAL_SELECTOR);
+    if (!modalEl) return null;
+    
+    // Setup custom handlers if provided
+    if (typeof setupCallback === "function") {
+      setupCallback(modalEl);
     }
-
-    if (!current) return loadAndShow();
-    const instance = bootstrap.Modal.getInstance(current);
-    current.addEventListener('hidden.bs.modal', loadAndShow, {once: true});
-
-    document.activeElement?.blur();
-    instance.hide();
+    
+    // Show modal
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    
+    // Cleanup on hide
+    modalEl.addEventListener("hidden.bs.modal", () => {
+      modalEl.remove();
+    }, { once: true });
+    
+    return modalEl;
+  } catch (error) {
+    console.error("Failed to load dynamic modal:", error);
+    return null;
+  }
 }
 
 /**
@@ -120,21 +221,37 @@ async function open(name) {
  * @param {Object} [options={}] - Configuration options.
  * @param {string} [options.CONTAINER_SELECTOR] - Custom selector for modal container.
  * @param {string} [options.TRIGGER_SELECTOR] - Selector for modal trigger elements.
+ * @param {string[]} [options.preloadList=[]] - List of modal names to preload.
+ * @param onReady - Callback function to execute when preloading is complete.
  * @returns {Promise<void>}
  */
-async function init({CONTAINER_SELECTOR, TRIGGER_SELECTOR} = {}) {
-    if (CONTAINER_SELECTOR) CONFIG.CONTAINER_SELECTOR = CONTAINER_SELECTOR;
-    if (TRIGGER_SELECTOR) CONFIG.TRIGGER_SELECTOR = TRIGGER_SELECTOR;
+async function init({
+  CONTAINER_SELECTOR,
+  TRIGGER_SELECTOR,
+  preloadList = [],
+  onReady,
+} = {}) {
+  if (CONTAINER_SELECTOR) CONFIG.CONTAINER_SELECTOR = CONTAINER_SELECTOR;
+  if (TRIGGER_SELECTOR) CONFIG.TRIGGER_SELECTOR = TRIGGER_SELECTOR;
 
-    document.addEventListener('click', e => {
-        const btn = e.target.closest(CONFIG.TRIGGER_SELECTOR);
-        if (!btn) return;
-        e.preventDefault();
-        const name = btn.dataset.type;
-        if (name) open(name);
-    });
+  if (preloadList.length) await preload(preloadList);
+
+  if (typeof onReady === "function") {
+    onReady();
+  }
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(CONFIG.TRIGGER_SELECTOR);
+    if (!btn) return;
+    e.preventDefault();
+    const name = btn.dataset.type;
+    if (name) open(name);
+  });
 }
 
 export const Modal = {
-    init, open
-}
+  init,
+  preload,
+  open,
+  openDynamic,
+};

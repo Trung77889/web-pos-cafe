@@ -28,4 +28,11 @@ public interface CategoryDAO {
      */
     List<Category> findAllByIsActiveTrueOrderByOrderIndexAsc() throws SQLException;
 
+    /**
+     * Finds a category by its slug.
+     * @param slug the category slug
+     * @return Category or null if not found
+     */
+    Category findBySlug(String slug) throws SQLException;
+
 }

@@ -214,7 +214,8 @@ Initializes all authentication-related services and registers them inside `Servl
 ## 9. SCSS Build
 
 ```
-sass ./app.scss ./app.css -w -q
+sass ./src/main/webapp/assets/client/styles/app.scss ./src/main/webapp/assets/client/styles/app.css -w -q
+sass ./src/main/webapp/assets/shared/styles/base.scss ./src/main/webapp/assets/shared/styles/base.css -w -q
 ```
 
 ## 10. Application URL

@@ -2,6 +2,9 @@ package com.laptrinhweb.zerostarcafe.web.client.servlet;
 
 import com.laptrinhweb.zerostarcafe.domain.category.Category;
 import com.laptrinhweb.zerostarcafe.domain.category.CategoryService;
+import com.laptrinhweb.zerostarcafe.domain.product.model.CatalogItem;
+import com.laptrinhweb.zerostarcafe.domain.product.model.ProductConstants;
+import com.laptrinhweb.zerostarcafe.domain.product.service.ProductService;
 import com.laptrinhweb.zerostarcafe.domain.store.model.Store;
 import com.laptrinhweb.zerostarcafe.domain.store.model.StoreConstants;
 import com.laptrinhweb.zerostarcafe.domain.store.model.StoreContext;
@@ -41,21 +44,39 @@ public class HomeServlet extends HttpServlet {
 
     private static final StoreService storeService = new StoreService();
     private static final CategoryService categoryService = new CategoryService();
+    private static final ProductService productService = new ProductService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
+        // Load all active stores for store selector
         List<Store> stores = storeService.getAllActiveStores();
         req.setAttribute(StoreConstants.Request.STORE_LIST, stores);
 
+        // Get current store from session context
         HttpSession session = req.getSession();
         StoreContext storeCtx = (StoreContext) session.getAttribute(StoreConstants.Session.CURRENT_STORE_CTX);
-        Store currentStore = storeService.getActiveStoreById(storeCtx.getStoreId());
+        Store currentStore = null;
+        for (Store store : stores) {
+            if (store.getId() == storeCtx.getStoreId())
+                currentStore = store;
+        }
         req.setAttribute(StoreConstants.Request.CURRENT_STORE, currentStore);
 
+        // Load active categories for navigation
         List<Category> categories = categoryService.loadActiveCategories();
         req.setAttribute(StoreConstants.Request.CATEGORIES, categories);
+
+        // Load ONLY featured category products (first category by order_index)
+        if (!categories.isEmpty()) {
+            Category featuredCategory = categories.get(0); // First category is featured
+            List<CatalogItem> catalogItems = productService.getCatalogItemsByStoreIdAndCategoryId(
+                    storeCtx.getStoreId(),
+                    featuredCategory.getId()
+            );
+            req.setAttribute(ProductConstants.Request.CATALOG_ITEMS, catalogItems);
+        }
 
         View.render(ViewMap.Client.HOME, req, resp);
     }

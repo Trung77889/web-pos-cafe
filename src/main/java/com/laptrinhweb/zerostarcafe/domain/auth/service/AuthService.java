@@ -15,6 +15,7 @@ import com.laptrinhweb.zerostarcafe.domain.auth.record.AuthRecordService;
 import com.laptrinhweb.zerostarcafe.domain.user.model.User;
 import com.laptrinhweb.zerostarcafe.domain.user.model.UserMapper;
 import com.laptrinhweb.zerostarcafe.domain.user.model.UserRole;
+import com.laptrinhweb.zerostarcafe.domain.user.model.UserStatus;
 import com.laptrinhweb.zerostarcafe.domain.user.service.UserService;
 import com.laptrinhweb.zerostarcafe.domain.user_role.UserStoreRole;
 import lombok.NonNull;
@@ -53,8 +54,8 @@ import java.util.Optional;
  * }</pre>
  *
  * @author Dang Van Trung
- * @version 1.2.2
- * @lastModified 14/12/2025
+ * @version 1.2.3
+ * @lastModified 18/12/2025
  * @since 1.0.0
  */
 public final class AuthService {
@@ -70,19 +71,17 @@ public final class AuthService {
             UserService userService = new UserService(conn);
 
             String email = normalize(dto.getEmail());
-            String username = normalize(dto.getUsername());
+            String username = UsernameGenerator.generate(email);
 
             // Check duplicate
             if (userService.existsByEmail(email))
                 return AuthResult.fail(AuthStatus.EMAIL_EXISTS);
 
-            if (userService.existsByUsername(username))
-                return AuthResult.fail(AuthStatus.USERNAME_EXISTS);
-
             // Create a new user
             User newUser = new User();
             newUser.setEmail(email);
             newUser.setUsername(username);
+            newUser.setStatus(UserStatus.ACTIVE);
 
             // Hash password securely (Argon2)
             String hashedPassword = PasswordUtil.hash(dto.getPassword());
@@ -331,8 +330,8 @@ public final class AuthService {
     public AuthUser verifyCredential(Connection conn, LoginDTO dto) {
         UserService userService = new UserService(conn);
 
-        String username = normalize(dto.getUsername());
-        User user = userService.getActiveByUsername(username);
+        String email = normalize(dto.getEmail());
+        User user = userService.getActiveByEmail(email);
         if (user == null)
             return null;
 

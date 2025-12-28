@@ -41,8 +41,13 @@ public final class PathUtil {
     // ============================
     public static final class Client {
         private static final String BASE = "/WEB-INF/views/client";
+        private static final String FRAGMENTS = BASE + "/fragments";
         private static final String PAGES = BASE + "/pages";
         private static final String LAYOUTS = BASE + "/layouts";
+
+        public static String fragment(String fragmentName) {
+            return FRAGMENTS + "/" + fragmentName + ".jsp";
+        }
 
         public static String page(String viewPath) {
             return PAGES + "/" + viewPath + ".jsp";

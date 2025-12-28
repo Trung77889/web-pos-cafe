@@ -1,3 +1,36 @@
-import {initStoreDetection} from './modules/store-detect.js';
+﻿/**
+ * ------------------------------------------------------------
+ * Module: Client App Bootstrap
+ * ------------------------------------------------------------
+ * @description
+ * Entry point for client-side features. Wires up UI modules
+ * on DOMContentLoaded using simple, predictable initialization.
+ *
+ * @example
+ * // Executed automatically after DOM is ready
+ *
+ * @version 1.0.1
+ * @since 1.0.0
+ * @lastModified 28/12/2025
+ * @module app-main
+ * @author Dang Van Trung
+ */
+import { initStoreDetection } from "./modules/store-detect.js";
+import { initCategorySlider } from "./modules/swiper.js";
+import { initCartInteractions } from "./modules/cart.js";
+import { initProductModal } from "./modules/product-modal.js";
+import { initProductCards } from "./modules/product-card.js";
+import { initPasswordToggle, initFormValidation } from "./modules/form.js";
+import { initCatalogSwitcher } from "./modules/catalog.js";
 
 initStoreDetection();
+initPasswordToggle();
+initFormValidation();
+
+document.addEventListener("DOMContentLoaded", () => {
+  initCategorySlider();
+  initCartInteractions();
+  initProductModal();
+  initProductCards();
+  initCatalogSwitcher();
+});

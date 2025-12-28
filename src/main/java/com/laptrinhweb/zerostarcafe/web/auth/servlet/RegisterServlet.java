@@ -6,6 +6,7 @@ import com.laptrinhweb.zerostarcafe.domain.auth.dto.RegisterDTO;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthResult;
 import com.laptrinhweb.zerostarcafe.domain.auth.model.AuthStatus;
 import com.laptrinhweb.zerostarcafe.domain.auth.service.AuthService;
+import com.laptrinhweb.zerostarcafe.web.auth.mapper.AuthWebMapper;
 import com.laptrinhweb.zerostarcafe.web.common.routing.AppRoute;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -21,8 +22,8 @@ import java.util.Map;
  * Handles user register: validate → register.
  *
  * @author Dang Van Trung
- * @version 1.0.1
- * @lastModified 13/12/2025
+ * @version 1.0.2
+ * @lastModified 28/12/2025
  * @since 1.0.0
  */
 @WebServlet(name = "RegisterServlet", urlPatterns = "/auth/register")
@@ -34,13 +35,8 @@ public class RegisterServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        // Read registration form data
-        String email = req.getParameter("regEmail");
-        String username = req.getParameter("regUsername");
-        String password = req.getParameter("regPassword");
-        String agreeTerms = req.getParameter("agreeTerms");
-
-        RegisterDTO form = new RegisterDTO(email, username, password, agreeTerms);
+        // Read registration form data and convert to DTO
+        RegisterDTO form = AuthWebMapper.toRegisterDTO(req);
 
         // Validate input
         ValidationResult validation = form.validate();
@@ -57,12 +53,10 @@ public class RegisterServlet extends HttpServlet {
             return;
         }
 
-        // Handle known business errors (duplicate email / username)
+        // Handle known business errors (duplicate email)
         Map<String, String> fieldErrors = new HashMap<>();
         if (authResult.getStatus() == AuthStatus.EMAIL_EXISTS)
-            fieldErrors.put("regEmail", "form.email_exists");
-        if (authResult.getStatus() == AuthStatus.USERNAME_EXISTS)
-            fieldErrors.put("regUsername", "form.username_exists");
+            fieldErrors.put("email", "form.email_exists");
 
         failedRegister(form, fieldErrors, req, resp);
     }
