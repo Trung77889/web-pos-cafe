@@ -22,6 +22,7 @@ import { initProductModal } from "./modules/product-modal.js";
 import { initProductCards } from "./modules/product-card.js";
 import { initPasswordToggle, initFormValidation } from "./modules/form.js";
 import { initCatalogSwitcher } from "./modules/catalog.js";
+import { initProductSearch } from "./modules/search.js";
 
 initStoreDetection();
 initPasswordToggle();
@@ -33,4 +34,5 @@ document.addEventListener("DOMContentLoaded", () => {
   initProductModal();
   initProductCards();
   initCatalogSwitcher();
+  initProductSearch();
 });

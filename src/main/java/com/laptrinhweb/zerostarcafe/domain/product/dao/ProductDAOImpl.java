@@ -29,77 +29,8 @@ public class ProductDAOImpl implements ProductDAO {
     }
 
     // ==========================================================
-    // PRODUCT RETRIEVAL
+    // CATALOG ITEM RETRIEVAL
     // ==========================================================
-
-    @Override
-    public Optional<Product> findById(long id) throws SQLException {
-        String sql = """
-                SELECT id, category_id, name, image_url, description,
-                       base_price, unit, is_active, created_at
-                FROM menu_items
-                WHERE id = ?
-                """;
-
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setLong(1, id);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    return Optional.empty();
-                }
-                return Optional.of(mapProduct(rs));
-            }
-        }
-    }
-
-    @Override
-    public List<Product> findAllActive() throws SQLException {
-        String sql = """
-                SELECT id, category_id, name, image_url, description,
-                       base_price, unit, is_active, created_at
-                FROM menu_items
-                WHERE is_active = 1
-                ORDER BY name
-                """;
-
-        List<Product> list = new ArrayList<>();
-
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                list.add(mapProduct(rs));
-            }
-        }
-
-        return list;
-    }
-
-    @Override
-    public List<Product> findAllActiveByCategoryId(long categoryId) throws SQLException {
-        String sql = """
-                SELECT id, category_id, name, image_url, description,
-                       base_price, unit, is_active, created_at
-                FROM menu_items
-                WHERE is_active = 1 AND category_id = ?
-                ORDER BY name
-                """;
-
-        List<Product> list = new ArrayList<>();
-
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setLong(1, categoryId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(mapProduct(rs));
-                }
-            }
-        }
-
-        return list;
-    }
 
     @Override
     public Optional<CatalogItem> findCatalogItemBySlugAndStoreId(String productSlug, long storeId) throws SQLException {
@@ -136,10 +67,6 @@ public class ProductDAOImpl implements ProductDAO {
 
         return Optional.empty();
     }
-
-    // ==========================================================
-    // CATALOG ITEM RETRIEVAL
-    // ==========================================================
 
     @Override
     public List<CatalogItem> findCatalogItemsByStoreId(long storeId) throws SQLException {
@@ -219,61 +146,9 @@ public class ProductDAOImpl implements ProductDAO {
         return list;
     }
 
-    @Override
-    public Optional<CatalogItem> findCatalogItemByIdAndStoreId(long productId, long storeId) throws SQLException {
-        String sql = """
-                SELECT 
-                    mi.id, mi.category_id, mi.name, mi.image_url, mi.description,
-                    mi.base_price, mi.unit, mi.is_active,
-                    c.slug AS category_slug,
-                    smi.in_menu, smi.availability_status, smi.sold_out_until, smi.sold_out_note,
-                    COALESCE(sips.price, mi.base_price) AS resolved_price,
-                    (SELECT COUNT(*) FROM item_option_groups iog WHERE iog.menu_item_id = mi.id) AS has_options
-                FROM menu_items mi
-                INNER JOIN categories c ON mi.category_id = c.id
-                INNER JOIN store_menu_items smi ON mi.id = smi.menu_item_id
-                LEFT JOIN store_item_price_schedules sips 
-                    ON smi.store_id = sips.store_id 
-                    AND smi.menu_item_id = sips.menu_item_id
-                    AND NOW() BETWEEN sips.valid_from AND sips.valid_to
-                WHERE mi.id = ?
-                  AND smi.store_id = ?
-                  AND mi.is_active = 1
-                """;
-
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setLong(1, productId);
-            ps.setLong(2, storeId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    return Optional.empty();
-                }
-                return Optional.of(mapCatalogItem(rs));
-            }
-        }
-    }
-
     // ==========================================================
     // PRODUCT DETAIL RETRIEVAL
     // ==========================================================
-
-    @Override
-    public Optional<ProductDetail> findProductDetailByIdAndStoreId(long productId, long storeId) throws SQLException {
-        Optional<CatalogItem> itemOpt = findCatalogItemByIdAndStoreId(productId, storeId);
-        if (itemOpt.isEmpty()) {
-            return Optional.empty();
-        }
-
-        CatalogItem item = itemOpt.get();
-        List<OptionGroup> optionGroups = findOptionGroupsByProductIdAndStoreId(productId, storeId);
-
-        ProductDetail detail = new ProductDetail();
-        detail.setItem(item);
-        detail.setOptionGroups(optionGroups);
-
-        return Optional.of(detail);
-    }
 
     @Override
     public Optional<ProductDetail> findProductDetailBySlugAndStoreId(String productSlug, long storeId) throws SQLException {
@@ -355,27 +230,52 @@ public class ProductDAOImpl implements ProductDAO {
     }
 
     // ==========================================================
-    // MAPPING UTILITIES
+    // SEARCH
     // ==========================================================
 
-    private Product mapProduct(ResultSet rs) throws SQLException {
-        Product p = new Product();
-        p.setId(rs.getLong("id"));
-        p.setCategoryId(rs.getLong("category_id"));
-        p.setName(rs.getString("name"));
-        p.setImageUrl(rs.getString("image_url"));
-        p.setDescription(rs.getString("description"));
-        p.setBasePrice(rs.getInt("base_price"));
-        p.setUnit(rs.getString("unit"));
-        p.setActive(rs.getBoolean("is_active"));
+    @Override
+    public List<CatalogItem> searchCatalogItemsByNameAndStoreId(long storeId, String searchTerm) throws SQLException {
+        String sql = """
+                SELECT 
+                    mi.id, mi.category_id, mi.name, mi.slug, mi.image_url, mi.description,
+                    mi.base_price, mi.unit, mi.is_active,
+                    c.slug AS category_slug,
+                    smi.in_menu, smi.availability_status, smi.sold_out_until, smi.sold_out_note,
+                    COALESCE(sips.price, mi.base_price) AS resolved_price,
+                    (SELECT COUNT(*) FROM item_option_groups iog WHERE iog.menu_item_id = mi.id) AS has_options
+                FROM menu_items mi
+                INNER JOIN categories c ON mi.category_id = c.id
+                INNER JOIN store_menu_items smi ON mi.id = smi.menu_item_id
+                LEFT JOIN store_item_price_schedules sips 
+                    ON smi.store_id = sips.store_id 
+                    AND smi.menu_item_id = sips.menu_item_id
+                    AND NOW() BETWEEN sips.valid_from AND sips.valid_to
+                WHERE smi.store_id = ?
+                  AND mi.is_active = 1
+                  AND smi.in_menu = 1
+                  AND mi.name LIKE ?
+                ORDER BY mi.name
+                """;
 
-        Timestamp created = rs.getTimestamp("created_at");
-        if (created != null) {
-            p.setCreatedAt(created.toLocalDateTime());
+        List<CatalogItem> list = new ArrayList<>();
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, storeId);
+            ps.setString(2, "%" + searchTerm + "%");
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapCatalogItem(rs));
+                }
+            }
         }
 
-        return p;
+        return list;
     }
+
+    // ==========================================================
+    // MAPPING UTILITIES
+    // ==========================================================
 
     private CatalogItem mapCatalogItem(ResultSet rs) throws SQLException {
         CatalogItem item = new CatalogItem();

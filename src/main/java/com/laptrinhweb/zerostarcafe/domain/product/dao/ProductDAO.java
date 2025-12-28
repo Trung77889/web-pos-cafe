@@ -32,8 +32,8 @@ import java.util.Optional;
  * // Load all active products for a store's menu
  * List<CatalogItem> items = productDAO.findCatalogItemsByStoreId(1L);
  *
- * // Get full product details for a specific product
- * Optional<ProductDetail> detail = productDAO.findProductDetailByIdAndStoreId(1L, 1L);
+ * // Get full product details for a specific product by slug
+ * Optional<ProductDetail> detail = productDAO.findProductDetailBySlugAndStoreId("ca-phe-sua", 1L);
  * }</pre>
  *
  * @author Dang Van Trung
@@ -42,32 +42,6 @@ import java.util.Optional;
  * @since 1.0.0
  */
 public interface ProductDAO {
-
-    /**
-     * Finds a product by its ID.
-     *
-     * @param id the product ID
-     * @return an {@link Optional} containing the product if found
-     * @throws SQLException if a database access error occurs
-     */
-    Optional<Product> findById(long id) throws SQLException;
-
-    /**
-     * Finds all active products.
-     *
-     * @return list of active products
-     * @throws SQLException if a database access error occurs
-     */
-    List<Product> findAllActive() throws SQLException;
-
-    /**
-     * Finds all active products in a specific category.
-     *
-     * @param categoryId the category ID
-     * @return list of active products in the category
-     * @throws SQLException if a database access error occurs
-     */
-    List<Product> findAllActiveByCategoryId(long categoryId) throws SQLException;
 
     /**
      * Loads catalog items (products with availability and pricing) for a specific store.
@@ -90,29 +64,9 @@ public interface ProductDAO {
     List<CatalogItem> findCatalogItemsByStoreIdAndCategoryId(long storeId, long categoryId) throws SQLException;
 
     /**
-     * Loads a catalog item by product ID and store ID.
-     *
-     * @param productId the product ID
-     * @param storeId   the store ID
-     * @return an {@link Optional} containing the catalog item if found
-     * @throws SQLException if a database access error occurs
-     */
-    Optional<CatalogItem> findCatalogItemByIdAndStoreId(long productId, long storeId) throws SQLException;
-
-    /**
      * Finds a catalog item by slug and store ID.
      */
     Optional<CatalogItem> findCatalogItemBySlugAndStoreId(String productSlug, long storeId) throws SQLException;
-
-    /**
-     * Loads product detail including options and pricing for a specific store.
-     *
-     * @param productId the product ID
-     * @param storeId   the store ID
-     * @return an {@link Optional} containing the product detail if found
-     * @throws SQLException if a database access error occurs
-     */
-    Optional<ProductDetail> findProductDetailByIdAndStoreId(long productId, long storeId) throws SQLException;
 
     /**
      * Finds complete product details by slug and store.
@@ -128,5 +82,15 @@ public interface ProductDAO {
      * @throws SQLException if a database access error occurs
      */
     List<OptionGroup> findOptionGroupsByProductIdAndStoreId(long productId, long storeId) throws SQLException;
+
+    /**
+     * Searches catalog items by product name for a specific store.
+     *
+     * @param storeId the store ID
+     * @param searchTerm the search term to match against product names
+     * @return list of catalog items matching the search term
+     * @throws SQLException if a database access error occurs
+     */
+    List<CatalogItem> searchCatalogItemsByNameAndStoreId(long storeId, String searchTerm) throws SQLException;
 }
 

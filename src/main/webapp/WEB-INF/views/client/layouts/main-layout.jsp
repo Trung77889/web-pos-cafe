@@ -40,6 +40,15 @@
     <%-- Modal container --%>
     <div id="modal-container"></div>
 
+    <%-- Full page loading overlay --%>
+    <div class="page-loader" data-page-loader>
+        <div class="page-loader__spinner">
+            <div class="page-loader__circle"></div>
+            <div class="page-loader__circle"></div>
+            <div class="page-loader__circle"></div>
+        </div>
+    </div>
+
     <%-- Flash data: messages for toasts, and form state for modal reopening --%>
     <c:if test="${not empty requestScope.messages or not empty requestScope.openModal or not empty requestScope.formData}">
         <div id="flash-data" hidden

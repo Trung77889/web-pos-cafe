@@ -13,15 +13,32 @@
                     <div
                             class="d-flex align-items-center justify-content-end gap-4 flex-wrap"
                     >
-                        <div class="search-field search-field--wide">
+                        <div class="search-field search-field--wide" style="position: relative;">
                             <input
                                     class="search-field__input"
                                     type="text"
                                     placeholder="Uống gì nè bạn?"
+                                    data-search-input
+                                    autocomplete="off"
                             />
                             <span class="search-field__icon icon-base"
                             ><i class="fi fi-rr-search"></i
                             ></span>
+                            <!-- Search History Dropdown -->
+                            <div class="search-history" data-search-history>
+                                <div class="search-history__header">
+                                    <span class="search-history__title">
+                                        <i class="fi fi-rr-time-past"></i>
+                                        Tìm kiếm gần đây
+                                    </span>
+                                    <button type="button" class="search-history__clear" data-history-clear>
+                                        <i class="fi fi-rr-trash"></i>
+                                    </button>
+                                </div>
+                                <ul class="search-history__list" data-history-list>
+                                    <!-- History items will be inserted here -->
+                                </ul>
+                            </div>
                         </div>
                     </div>
 

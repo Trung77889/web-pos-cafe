@@ -32,6 +32,7 @@ export const StoreWebConstants = {
 export const ProductWebConstants = {
     Endpoint: {
         PRODUCT_MODAL: "/zero_star_cafe/api/products",
-        PRODUCTS_BY_CATEGORY: "/zero_star_cafe/api/products/category"
+        PRODUCTS_BY_CATEGORY: "/zero_star_cafe/api/products/category",
+        PRODUCT_SEARCH: "/zero_star_cafe/api/products/search"
     }
 };
