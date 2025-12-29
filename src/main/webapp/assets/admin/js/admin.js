@@ -38,21 +38,6 @@ function setupDynamicSearch(inputSelector, tableBodySelector, columnsToSearch) {
     });
 }
 
-// HÀM 2: LOGIC CHUYỂN TRANG (SIDEBAR)
-function setupPageNavigation() {
-    $('.navigation a').on('click', function (event) {
-        event.preventDefault();
-        const $clickedLink = $(this);
-        const targetId = $clickedLink.attr('href').substring(1);
-
-        $('.navigation li.active').removeClass('active');
-        $clickedLink.parent().addClass('active');
-
-        $('.page-content').removeClass('active');
-        $('#' + targetId).addClass('active');
-    });
-}
-
 // HÀM 3: VẼ BIỂU ĐỒ DOANH THU
 function setupRevenueChart() {
     const $ctx = $('#myRevenueChart');
@@ -218,7 +203,7 @@ function setupModalTrigger(containerSelector, btnSelector) {
 
     $(containerSelector).on('click', btnSelector, function () {
         const $button = $(this);
-        const $row = $button.closest('tr'); // Giả định dữ liệu nằm trên <tr>
+        const $row = $button.closest('tr'); // Dữ liệu nằm trên <tr>
 
         // 1. Lấy ID modal từ 'data-target' của nút
         const modalSelector = $button.data('target');
@@ -261,12 +246,18 @@ function setupHandleModal() {
 
                 const $img = $modal.find('[data-fill-src="' + key + '"]');
                 if ($img.length) {
-                    // Xử lý ẩn/hiện nếu không có ảnh
                     if (value) {
                         $img.attr('src', value).show();
                     } else {
-                        $img.attr('src', '').hide();
+                        $img.attr('src', 'https://via.placeholder.com/200x200?text=No+Image').show();
                     }
+                }
+                // 3. Xử lý hiển thị ẩn/hiện
+                if (key === 'hide') {
+                    // Nếu hide=true (đang ẩn) -> checkbox bỏ tick.
+                    // Nếu hide=false (đang hiện) -> checkbox tick.
+                    const isActive = (value === false);
+                    $modal.find('input[name="active"]').prop('checked', isActive);
                 }
             }
         }
@@ -301,6 +292,70 @@ function excelExport() {
         XLSX.utils.book_append_sheet(wb, ws_details, "Chi Tiết Theo Tháng");
         XLSX.writeFile(wb, "BaoCaoDoanhThu.xlsx");
     })
+}
+
+// HÀM 12: HÀM XỬ LÝ ĐỒNG BỘ ALERT
+function showNotification(message, type) {
+    $('.alert').remove();
+
+    const alertType = type === 'success' ? 'alert-success' : 'alert-danger';
+    const title = type === 'success' ? 'Thành công!' : 'Thông báo:';
+
+    const alertHtml = `
+        <div class="alert ${alertType}" role="alert">
+            <strong>${title}</strong> ${message}
+        </div>
+    `;
+
+    $('body').append(alertHtml);
+    if ($(".alert").length) {
+        window.setTimeout(function () {
+            $(".alert").fadeTo(500, 0).slideUp(500, function () {
+                $(this).remove();
+            });
+
+        }, 3000);
+    }
+}
+
+// HÀM 13: HÀM XỬ LÝ ẨN HIỆN
+function hideItem() {
+    $(document).on('click', '.btn-hide', function (e) {
+        e.preventDefault();
+        const $btn = $(this);
+        const $row = $btn.closest("tr");
+
+        const id = $row.data('id');
+        const isCurrentlyHidden = $row.attr("data-hide") === "true";
+
+        const newActiveStatus = isCurrentlyHidden;
+
+        $.ajax({
+            url: 'admin/api/product-status',
+            method: 'POST',
+            data: {
+                id: id,
+                active: newActiveStatus
+            },
+            success: function () {
+                showNotification("Cập nhật trạng thái thành công!", "success");
+
+                const newHiddenState = !isCurrentlyHidden;
+                $row.attr("data-hide", newHiddenState);
+
+                if (newHiddenState) {
+                    $row.addClass("hidden-row");
+                    $btn.html('<i class="fa-regular fa-eye-slash"></i>');
+                } else {
+                    $row.removeClass("hidden-row");
+                    $btn.html('<i class="fa-regular fa-eye"></i>');
+                }
+            },
+            error: function () {
+                showNotification("Lỗi kết nối! Không thể cập nhật trạng thái.", "error");
+            }
+        });
+    });
 }
 
 // Plugin jQuery để thiết lập xem trước hình ảnh và nút xóa.
@@ -342,46 +397,81 @@ $.fn.setupImagePreview = function (previewSelector, removeSelector) {
 
 // ĐIỂM KHỞI ĐỘNG của JQuery
 $(function () {
-    // Found bar cho Product
-    setupDynamicSearch('#product-search-input', '#product .data-table tbody', [0, 2]);
-    // Found bar cho Order
-    setupDynamicSearch('#order-search-input', '#order .data-table tbody', [0, 1]);
-    // Hiệu ứng chuyển trang
-    setupPageNavigation();
-    // Hiển thị biểu đồ doanh thu trong Dashboard
-    setupRevenueChart();
-    // Mở modal tạo tài khoản
-    setupModal('#create-account-btn', '#create-account-modal');
-    // Mở modal tạo sản phẩm
-    setupModal('#create-product-btn', '#create-product-modal');
-    // Mở modal tạo nhân viên
-    setupModal('#create-staff-btn', '#create-staff-modal');
-    // Thêm hình ảnh và loại bỏ hình ảnh cho phần thêm hình ảnh trong modal tạo sản phẩm
-    $('#newPic').setupImagePreview('#imagePreview', '#removeImageBtn');
-    // Khởi tạo chức năng lọc ngày cho Lịch
-    initDateFilter('#date-filter-button', '#date-filter-text');
-    // Khởi tạo chức năng chọn này cho Form create staff modal
-    initDateStaffWork('#createStaffJoinDate');
-    // Sort cho bestseller
-    initBestsellerSort();
-    // Mở modal xuất nhập kho trong
-    initInventoryActions();
-    // Mở modal xử lý cho edit trong product
-    setupModalTrigger('#product', '.btn-edit');
-    // Mở modal xử lý cho delete trong product
-    setupModalTrigger('#product', '.btn-delete');
-    // Mở modal xử lý cho edit trong account
-    setupModalTrigger('#account', '.btn-edit');
-    // Mở modal xử lý cho delete trong account
-    setupModalTrigger('#account', '.btn-delete');
-    // Mở modal xử lý cho edit trong staff
-    setupModalTrigger('#staff', '.btn-edit');
-    // Mở modal xử lý cho delete trong staff
-    setupModalTrigger('#staff', '.btn-delete');
-    // Khởi động xử lý lấy thông tin cho modal
+
+    if ($('#product').length) {
+        setupDynamicSearch(
+            '#product-search-input',
+            '#product .data-table tbody',
+            [0, 2]
+        );
+        setupModal('#create-product-btn', '#create-product-modal');
+        setupModalTrigger('#product', '.btn-edit');
+        setupModalTrigger('#product', '.btn-delete');
+        if ($('#newPic').length) {
+            $('#newPic').setupImagePreview('#imagePreview', '#removeImageBtn');
+        }
+        hideItem();
+
+        $('#edit-product-image').setupImagePreview('#edit-image-preview', '#fake-remove-btn');
+        // Xử lý Preview ảnh khi chọn file
+        $('#edit-product-image').on('change', function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    $('#edit-image-preview').attr('src', e.target.result).show();
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        $('#edit-image-preview').on('click', function () {
+            const currentSrc = $(this).attr('src');
+            if (!currentSrc || currentSrc.includes('via.placeholder.com')) {
+                return;
+            }
+
+            $('#full-size-image').attr('src', currentSrc);
+
+            $('#image-viewer-modal').css('display', 'flex').hide().fadeIn(200);
+        });
+
+        $('#image-viewer-modal .close-btn-img, #image-viewer-modal').on('click', function (e) {
+            if (e.target.id === 'full-size-image') {
+                return;
+            }
+            $('#image-viewer-modal').fadeOut(200);
+        });
+    }
+
+    if ($('#order').length) {
+        setupDynamicSearch(
+            '#order-search-input',
+            '#order .data-table tbody',
+            [0, 1]
+        );
+    }
+
+    if ($('#account').length) {
+        setupModalTrigger('#account', '.btn-edit');
+        setupModalTrigger('#account', '.btn-delete');
+    }
+
+    if ($('#staff').length) {
+        setupModalTrigger('#staff', '.btn-edit');
+        setupModalTrigger('#staff', '.btn-delete');
+        initDateStaffWork('#createStaffJoinDate');
+    }
+
+    if ($(".alert").length) {
+        window.setTimeout(function () {
+            $(".alert").fadeTo(500, 0).slideUp(500, function () {
+                $(this).remove();
+            });
+
+        }, 3000);
+    }
     setupHandleModal();
-    // Khởi động cho nút xuất báo cáo
-    excelExport();
-    // Xử lý close button
     closeModal();
+    excelExport();
 });

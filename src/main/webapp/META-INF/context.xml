@@ -8,7 +8,7 @@
               factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
 
               driverClassName="com.mysql.cj.jdbc.Driver"
-              url="jdbc:mysql://localhost:3306/zerostar_cf"
+              url="jdbc:mysql://localhost:3306/zerostar_cf?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC&amp;characterEncoding=UTF-8"
               username="root"
               password=""
 
